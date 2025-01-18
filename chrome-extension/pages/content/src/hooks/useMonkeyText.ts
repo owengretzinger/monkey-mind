@@ -1,12 +1,17 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { HATS } from '@extension/storage';
 
 export function useMonkeyText(selectedHat: string) {
   const [speechText, setSpeechText] = useState<string>('');
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const timeoutsRef = useRef<{ speaking?: number; text?: number }>({});
 
   const generateText = useCallback(
     async (mock = false) => {
+      // Clear existing timeouts
+      if (timeoutsRef.current.speaking) clearTimeout(timeoutsRef.current.speaking);
+      if (timeoutsRef.current.text) clearTimeout(timeoutsRef.current.text);
+
       const pageContent = document.body.innerText;
       const currentHat = HATS.find(h => h.id === selectedHat);
       if (!currentHat) {
@@ -35,8 +40,8 @@ export function useMonkeyText(selectedHat: string) {
       } catch (error) {
         console.error('Error generating text:', error);
       } finally {
-        setTimeout(() => setIsSpeaking(false), 4000);
-        setTimeout(() => setSpeechText(''), 10000);
+        timeoutsRef.current.speaking = setTimeout(() => setIsSpeaking(false), 4000);
+        timeoutsRef.current.text = setTimeout(() => setSpeechText(''), 10000);
       }
     },
     [selectedHat],
@@ -48,8 +53,17 @@ export function useMonkeyText(selectedHat: string) {
         generateText();
       }
     };
+
+    // Store the timeouts in a variable that won't change
+    const timeouts = timeoutsRef.current;
+
     chrome.runtime.onMessage.addListener(messageListener);
-    return () => chrome.runtime.onMessage.removeListener(messageListener);
+    return () => {
+      chrome.runtime.onMessage.removeListener(messageListener);
+      // Clean up timeouts using the stored variable
+      if (timeouts.speaking) clearTimeout(timeouts.speaking);
+      if (timeouts.text) clearTimeout(timeouts.text);
+    };
   }, [generateText]);
 
   return {
