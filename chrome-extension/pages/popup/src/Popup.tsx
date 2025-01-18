@@ -91,7 +91,7 @@ const Popup = () => {
             </button>
             <button 
               className="rounded-xl bg-amber-900/15 px-2 py-1" 
-              onClick={logoutHandler}
+              onClick={() => logout()}
             >
               Log Out
             </button>

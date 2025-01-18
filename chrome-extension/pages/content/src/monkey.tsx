@@ -14,22 +14,14 @@ export default function Monkey() {
   const selectedHat = useStorage(hatStorage);
   const { speechText, generateText } = useMonkeyText(selectedHat);
 
-  // Move startPosition out of the effect so it can be used in JSX
-  const startPosition = storedData.position;
-
   const getTargetPosition = () => {
+    const startPosition = storedData.position;
     let targetX;
-    let targetY;
 
-    if (storedData.state === 'leaving') {
-      // If leaving, exit through nearest edge
-      targetX = startPosition.x < window.innerWidth / 2 ? -100 : window.innerWidth + 100;
-      targetY = startPosition.y;
-    } else {
+    if (storedData.state === 'walking') {
       // If walking in, go to nearest quarter horizontally and ensure visible vertically
       const leftQuarter = window.innerWidth * 0.25;
       const rightQuarter = window.innerWidth * 0.75;
-      const quarterHeight = Math.floor(window.innerHeight * 0.25);
 
       // Determine horizontal position
       if (startPosition.x < 0) {
@@ -39,18 +31,18 @@ export default function Monkey() {
       } else {
         targetX = startPosition.x < window.innerWidth / 2 ? leftQuarter : rightQuarter;
       }
-
-      // Set vertical position to quarter height regardless of scroll position
-      targetY = window.scrollY + quarterHeight;
+    } else {
+      // If leaving, exit through nearest edge
+      targetX = startPosition.x < window.innerWidth / 2 ? -100 : window.innerWidth + 100;
     }
 
     return {
       x: Math.floor(targetX),
-      y: Math.floor(targetY),
+      y: Math.floor(startPosition.y),
     };
   };
 
-  const targetPosition = useMemo(getTargetPosition, [storedData.state, startPosition]);
+  const targetPosition = useMemo(getTargetPosition, [storedData.state, storedData.position]);
 
   // Add timer for idle state
   useEffect(() => {
@@ -111,15 +103,33 @@ export default function Monkey() {
   }, [generateText, storedData.state, storedData.position, targetPosition]);
 
   useEffect(() => {
-    const messageListener = (message: { type: string }) => {
+    const messageListener = async (message: { type: string }) => {
       if (message.type === 'COME_HERE') {
+        const topQuarter = window.scrollY + window.innerHeight * 0.25;
+        const bottomQuarter = window.scrollY + window.innerHeight * 0.75;
+        const currentY = storedData.position.y;
+
+        let newY = currentY;
+        if (currentY < topQuarter) {
+          newY = topQuarter;
+        } else if (currentY > bottomQuarter) {
+          newY = bottomQuarter;
+        }
+
+        const newPosition = {
+          x: storedData.position.x,
+          y: newY,
+        };
+
+        await monkeyStateStorage.setPosition(newPosition);
+
         monkeyStateStorage.setState('walking');
       }
     };
 
     chrome.runtime.onMessage.addListener(messageListener);
     return () => chrome.runtime.onMessage.removeListener(messageListener);
-  }, []);
+  }, [storedData.position.x, storedData.position.y]);
 
   return (
     <div
