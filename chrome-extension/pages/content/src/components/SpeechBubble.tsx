@@ -18,7 +18,7 @@ export const SpeechBubble: React.FC<SpeechBubbleProps> = ({ text, isThinking }) 
       <div
         style={{
           width: isThinking ? '5rem' : '20rem',
-          height: isThinking ? '3rem' : 'auto',
+          height: isThinking ? '1.85rem' : 'auto',
           borderRadius: '0.5rem',
           backgroundColor: 'white',
           padding: '0.5rem',
