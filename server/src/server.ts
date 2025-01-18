@@ -8,6 +8,7 @@ import morgan from 'morgan';
 import { connectDB } from './config/database';
 import noteRoutes from './routes/notes';
 import { ExtendedWebSocket, WebSocketMessage, UserPresence } from './types/messages';
+import mascotRoutes from './routes/mascot';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/notes', noteRoutes);
+app.use('/api/mascot', mascotRoutes);
 
 // Create HTTP server
 const server = http.createServer(app);
