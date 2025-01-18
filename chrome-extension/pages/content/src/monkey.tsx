@@ -6,7 +6,7 @@ import { useDraggable } from './hooks/useDraggable';
 import { useMonkeyText } from './hooks/useMonkeyText';
 
 const SPEED = 150; // pixels per second
-const WALKING_TIME = 1000; // milliseconds
+const WALKING_TIME = 8000; // milliseconds
 
 export default function Monkey() {
   const storedData = useStorage(monkeyStateStorage);

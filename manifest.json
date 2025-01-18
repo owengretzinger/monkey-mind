@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "permissions": [
+    "identity",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://*.auth0.com/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; frame-src 'self' https://*.auth0.com"
+  },
+  "web_accessible_resources": [{
+    "resources": ["popup.html", "assets/*"],
+    "matches": ["https://*.auth0.com/*"]
+  }],
+  "oauth2": {
+    "client_id": "fJxFAp9DABaE2WTkNEvScV9XQ2ZQrBwL",
+    "scopes": [
+      "openid",
+      "profile",
+      "email"
+    ]
+  }
+} 

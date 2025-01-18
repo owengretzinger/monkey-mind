@@ -1,10 +1,27 @@
 import '@src/Popup.css';
 import { useStorage, withErrorBoundary, withSuspense, MonkeyVisual } from '@extension/shared';
 import { HATS, hatStorage } from '@extension/storage';
+import { useAuth0 } from './auth/Auth0Provider';
+import { Login } from './components/Login';
 
 const Popup = () => {
+  const { isAuthenticated, isLoading } = useAuth0();
   const selectedHat = useStorage(hatStorage);
   const currentHat = HATS.find(hat => hat.id === selectedHat) || HATS[0];
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full bg-slate-50">
+        <p className="text-amber-900">Loading...</p>
+      </div>
+    );
+  }
+
+  // Show login if not authenticated
+  if (!isAuthenticated) {
+    return <Login />;
+  }
 
   const generateMonkeyText = async () => {
     const [tab] = await chrome.tabs.query({ currentWindow: true, active: true });
