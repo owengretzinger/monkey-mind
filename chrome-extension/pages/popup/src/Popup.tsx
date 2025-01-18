@@ -2,34 +2,15 @@ import '@src/Popup.css';
 import { useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
 import { HATS, hatStorage } from '@extension/storage';
 
-const notificationOptions = {
-  type: 'basic',
-  iconUrl: chrome.runtime.getURL('monkey.png'),
-  title: 'Injecting content script error',
-  message: 'You cannot inject script here!',
-} as const;
-
 const Popup = () => {
   const selectedHat = useStorage(hatStorage);
+  const currentHat = HATS.find(hat => hat.id === selectedHat);
 
-  const injectMonkey = async () => {
+  const generateMonkeyText = async () => {
     const [tab] = await chrome.tabs.query({ currentWindow: true, active: true });
-
-    if (tab.url!.startsWith('about:') || tab.url!.startsWith('chrome:')) {
-      chrome.notifications.create('inject-error', notificationOptions);
+    if (tab.id) {
+      chrome.tabs.sendMessage(tab.id, { type: 'GENERATE_TEXT' });
     }
-
-    await chrome.scripting
-      .executeScript({
-        target: { tabId: tab.id! },
-        files: ['/content-runtime/index.iife.js'],
-      })
-      .catch(err => {
-        // Handling errors related to other paths
-        if (err.message.includes('Cannot access a chrome:// URL')) {
-          chrome.notifications.create('inject-error', notificationOptions);
-        }
-      });
   };
 
   return (
@@ -41,18 +22,20 @@ const Popup = () => {
             <img src={chrome.runtime.getURL('monkey.png')} alt="logo" className="size-16" />
           </div>
           <div className="">
-            <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={injectMonkey}>
-              Inject Monkey
+            <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={generateMonkeyText}>
+              Make Monkey Talk
             </button>
           </div>
           <div className="">
             <p className="mb-2">Choose your hat</p>
+            {currentHat && <p className="mb-2 text-sm text-amber-900/75">{currentHat.name}</p>}
             <div className="flex flex-row flex-wrap justify-center gap-4">
               {HATS.map(hat => (
                 <button
-                  key={hat}
-                  className={`size-8 rounded-xl bg-amber-900/15 ${selectedHat === hat && 'ring-2 ring-amber-800'}`}
-                  onClick={() => hatStorage.setHat(hat)}></button>
+                  key={hat.id}
+                  title={`${hat.name}: ${hat.description}`}
+                  className={`size-8 rounded-xl bg-amber-900/15 ${selectedHat === hat.id && 'ring-2 ring-amber-800'}`}
+                  onClick={() => hatStorage.setHat(hat.id)}></button>
               ))}
             </div>
           </div>
