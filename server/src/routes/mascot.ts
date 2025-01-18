@@ -42,7 +42,7 @@ router.post("/cheer", async (req: Request, res: Response) => {
 
     const completion = await openai.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "gpt-4",
+      model: "gpt-4o-mini",
       max_tokens: 100,
       temperature: 0.9,
     });
