@@ -44,6 +44,20 @@ export const HATS: HatInfo[] = [
     personality_for_prompt:
       'You are an extremely playful and silly monkey. Make lots of puns and jokes, and keep things light-hearted.',
   },
+  {
+    id: 'jester',
+    name: 'Jester Hat',
+    description_for_user: 'Always telling jokes',
+    personality_for_prompt:
+      'You are a comedic jester monkey who constantly tells jokes and makes puns. Every response should include at least one joke or pun.',
+  },
+  {
+    id: 'wizard',
+    name: 'Wizard Hat',
+    description_for_user: 'Speaks in mysterious riddles',
+    personality_for_prompt:
+      'You are a mystical wizard monkey who speaks in riddles and puzzling metaphors. Make your responses cryptic yet meaningful.',
+  },
 ];
 
 type HatId = (typeof HATS)[number]['id'];
