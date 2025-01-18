@@ -6,7 +6,7 @@ import { useDraggable } from './hooks/useDraggable';
 import { useMonkeyText } from './hooks/useMonkeyText';
 
 const SPEED = 150; // pixels per second
-const WALKING_TIME = 1000; // milliseconds
+const WALKING_TIME = 5000; // milliseconds
 
 export default function Monkey() {
   const storedData = useStorage(monkeyStateStorage);
@@ -168,7 +168,7 @@ export default function Monkey() {
           storedData.state !== 'hiding'
             ? e => {
                 if (e.key === 'Enter' || e.key === ' ') {
-                  handleMouseDown(e as unknown as React.MouseEvent);
+                  handleMouseDown(e as unknown as React.MouseEvent<HTMLDivElement>);
                 }
               }
             : undefined

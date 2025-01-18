@@ -15,8 +15,9 @@ export const MonkeyVisual = ({ selectedHat, direction = 'left', state, className
     switch (state) {
       case 'walking':
       case 'leaving':
-      case 'dragging':
         return 'animations/walking.GIF';
+      case 'dragging':
+        return 'animations/flailing.GIF';
       case 'talking':
         return 'animations/speaking.GIF';
       default:
@@ -45,7 +46,7 @@ export const MonkeyVisual = ({ selectedHat, direction = 'left', state, className
         }}
         draggable={false}
       />
-      {currentHat && (
+      {currentHat && state !== 'dragging' && (
         <img
           src={chrome.runtime.getURL(`hats/${currentHat.id}.PNG`)}
           alt={currentHat.name}

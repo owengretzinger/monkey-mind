@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { MonkeyStorage, Position } from '@extension/storage';
 
 interface DragOffset {
@@ -8,6 +8,7 @@ interface DragOffset {
 
 export function useDraggable(initialPosition: Position, storage: MonkeyStorage) {
   const [dragOffset, setDragOffset] = useState<DragOffset>({ x: 0, y: 0 });
+  const elementRef = useRef<{ width: number; height: number }>({ width: 0, height: 0 });
 
   // Cleanup function to ensure we always reset dragging state
   const cleanup = useCallback(() => {
@@ -19,8 +20,8 @@ export function useDraggable(initialPosition: Position, storage: MonkeyStorage) 
     const handleMouseMove = async (e: MouseEvent) => {
       try {
         const newPosition = {
-          x: e.clientX + window.scrollX - dragOffset.x,
-          y: e.clientY + window.scrollY - dragOffset.y,
+          x: e.clientX + window.scrollX - elementRef.current.width / 2,
+          y: e.clientY + window.scrollY,
         };
         await storage.setPosition(newPosition);
         await storage.setState('dragging');
@@ -54,15 +55,20 @@ export function useDraggable(initialPosition: Position, storage: MonkeyStorage) 
   }, [dragOffset, storage, cleanup]);
 
   const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      // Cancel any walking/leaving animations
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const element = e.currentTarget as HTMLDivElement;
+      elementRef.current = {
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+      };
+
       storage.setState('dragging');
       setDragOffset({
-        x: e.clientX + window.scrollX - initialPosition.x,
-        y: e.clientY + window.scrollY - initialPosition.y,
+        x: elementRef.current.width / 2,
+        y: elementRef.current.height / 2,
       });
     },
-    [initialPosition.x, initialPosition.y, storage],
+    [storage],
   );
 
   return { handleMouseDown };
