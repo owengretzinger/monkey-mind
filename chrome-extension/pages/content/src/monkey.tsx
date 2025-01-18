@@ -19,7 +19,7 @@ export default function Monkey() {
     let targetX;
 
     if (storedData.state === 'walking') {
-      // If walking in, go to nearest quarter horizontally and ensure visible vertically
+      // If walking in, go to nearest quarter horizontally
       const leftQuarter = window.innerWidth * 0.25;
       const rightQuarter = window.innerWidth * 0.75;
 
@@ -31,14 +31,14 @@ export default function Monkey() {
       } else {
         targetX = startPosition.x < window.innerWidth / 2 ? leftQuarter : rightQuarter;
       }
-    } else {
+    } else if (storedData.state === 'leaving') {
       // If leaving, exit through nearest edge
       targetX = startPosition.x < window.innerWidth / 2 ? -100 : window.innerWidth + 100;
     }
 
     return {
-      x: Math.floor(targetX),
-      y: Math.floor(startPosition.y),
+      x: Math.floor(targetX!),
+      y: startPosition.y, // Keep same Y position
     };
   };
 
@@ -66,15 +66,11 @@ export default function Monkey() {
         lastTime = currentTime;
 
         const currentX = storedData.position.x;
-        const currentY = storedData.position.y;
-
-        // Calculate distances for both x and y
         const distanceX = targetPosition.x - currentX;
-        const distanceY = targetPosition.y - currentY;
         const directionX = distanceX > 0 ? 1 : -1;
         const moveAmount = speed * deltaTime;
 
-        if (Math.abs(distanceX) <= moveAmount && Math.abs(distanceY) <= moveAmount) {
+        if (Math.abs(distanceX) <= moveAmount) {
           monkeyStateStorage.setPosition(targetPosition);
           if (storedData.state === 'walking') {
             monkeyStateStorage.setState('talking');
@@ -83,10 +79,10 @@ export default function Monkey() {
             monkeyStateStorage.setState('hiding');
           }
         } else {
-          // Move both x and y towards target
+          // Move only horizontally
           monkeyStateStorage.setPosition({
-            x: currentX + (Math.abs(distanceX) <= moveAmount ? distanceX : moveAmount * directionX),
-            y: currentY + (distanceY * moveAmount) / Math.max(Math.abs(distanceX), 1), // proportional y movement
+            x: currentX + moveAmount * directionX,
+            y: storedData.position.y,
           });
           animationFrameId = requestAnimationFrame(animate);
         }
