@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 
 const Popup = () => {
   const { isAuthenticated, isLoading, logout } = useAuth0();
-  const [authenticated, setAuthenticated] = useState(isAuthenticated);
+  const [, setAuthenticated] = useState(isAuthenticated);
   const selectedHat = useStorage(hatStorage);
   const currentHat = HATS.find(hat => hat.id === selectedHat) || HATS[0];
 
@@ -15,18 +15,18 @@ const Popup = () => {
     setAuthenticated(isAuthenticated);
   }, [isAuthenticated]);
 
-  const logoutHandler = () => {
-    logoutHelper({ federated: true });
-    fetch(`https://${process.env.REACT_APP_AUTH0_DOMAIN}/v2/logout?federated=true&client_id=${process.env.REACT_APP_AUTH0_CLIENT_ID}`, {
-      credentials: 'include',
-      mode: 'no-cors'
-    }).catch();
-  };
+  // const logoutHandler = () => {
+  //   logoutHelper({ federated: true });
+  //   fetch(`https://${process.env.REACT_APP_AUTH0_DOMAIN}/v2/logout?federated=true&client_id=${process.env.REACT_APP_AUTH0_CLIENT_ID}`, {
+  //     credentials: 'include',
+  //     mode: 'no-cors'
+  //   }).catch();
+  // };
 
-  const logoutHelper = (options) => {
-    logout(options);
-    setAuthenticated(false);
-  };
+  // const logoutHelper = (options) => {
+  //   logout(options);
+  //   setAuthenticated(false);
+  // };
 
   // Show loading state
   if (isLoading) {
@@ -89,10 +89,7 @@ const Popup = () => {
             <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={callMonkey}>
               Come Here!
             </button>
-            <button 
-              className="rounded-xl bg-amber-900/15 px-2 py-1" 
-              onClick={() => logout()}
-            >
+            <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={() => logout()}>
               Log Out
             </button>
           </div>
