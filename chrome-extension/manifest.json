@@ -1,0 +1,18 @@
+{
+  "action": {
+    "default_popup": "popup.html",
+    "default_width": 400,
+    "default_height": 600
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "identity"
+  ],
+  "host_permissions": [
+    "https://*.auth0.com/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; frame-src 'self' https://*.auth0.com"
+  }
+} 
