@@ -15,6 +15,46 @@ const Popup = () => {
     setAuthenticated(isAuthenticated);
   }, [isAuthenticated]);
 
+
+
+
+  const writeToDatabase = async (userData: any) => {
+    const apiUrl = "http://localhost:3000/api/users/newUser";
+    console.log(userData)
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error writing to database:', errorData);
+    } else {
+      const responseData = await response.json();
+      console.log('User data written successfully:', responseData);
+    }
+  };
+
+
+
+  // Effect to write to the database when authenticated
+  useEffect(() => {
+    console.log(isLoading, isAuthenticated, user, "youasdf af");
+
+    // Check if not loading and authenticated
+    if (!isLoading && isAuthenticated && user) {
+      console.log(isLoading, isAuthenticated, user, "you are stupdi af");
+      writeToDatabase({
+        email: user.email,
+        name: user.name,
+      });
+    }
+  }, [isAuthenticated]); 
+
+
   // const logoutHandler = () => {
   //   logoutHelper({ federated: true });
   //   fetch(`https://${process.env.REACT_APP_AUTH0_DOMAIN}/v2/logout?federated=true&client_id=${process.env.REACT_APP_AUTH0_CLIENT_ID}`, {
