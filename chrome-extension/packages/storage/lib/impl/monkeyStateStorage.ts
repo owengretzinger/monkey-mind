@@ -2,7 +2,7 @@ import { StorageEnum } from '../base/enums';
 import { createStorage } from '../base/base';
 import type { BaseStorage } from '../base/types';
 
-type MonkeyState = 'hiding' | 'walking' | 'talking' | 'dragging' | 'idle' | 'leaving';
+type MonkeyState = 'hiding' | 'walking' | 'talking' | 'dragging' | 'idle' | 'leaving' | 'thinking';
 
 interface Position {
   x: number;

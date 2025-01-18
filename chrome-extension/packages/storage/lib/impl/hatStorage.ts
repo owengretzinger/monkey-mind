@@ -13,7 +13,7 @@ export const HATS: HatInfo[] = [
   {
     id: 'none',
     name: 'Hatless',
-    description_for_user: 'Default friendly monkey personality',
+    description_for_user: 'Default friendly monkey',
     personality_for_prompt: 'You are a friendly and helpful monkey assistant. Be cheerful and supportive.',
   },
   {

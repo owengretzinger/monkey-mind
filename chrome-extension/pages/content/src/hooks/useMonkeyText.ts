@@ -11,6 +11,8 @@ export function useMonkeyText(selectedHat: string) {
       if (timeoutsRef.current.speech) clearTimeout(timeoutsRef.current.speech);
       if (timeoutsRef.current.state) clearTimeout(timeoutsRef.current.state);
 
+      await monkeyStateStorage.setState('thinking');
+
       const pageContent = document.body.innerText;
       const currentHat = HATS.find(h => h.id === selectedHat);
       if (!currentHat) {
@@ -20,6 +22,8 @@ export function useMonkeyText(selectedHat: string) {
 
       try {
         if (mock) {
+          // Simulate API delay
+          await new Promise(resolve => setTimeout(resolve, 1000));
           setSpeechText("Hello! I'm Monkey Mind. I'm here to give you a new perspective.");
           await monkeyStateStorage.setState('talking');
         } else {

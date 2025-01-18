@@ -20,6 +20,8 @@ export const MonkeyVisual = ({ selectedHat, direction = 'left', state, className
         return 'animations/flailing.GIF';
       case 'talking':
         return 'animations/speaking.GIF';
+      case 'thinking':
+        return 'animations/idle.GIF'; // You can create a new thinking animation if desired
       default:
         return 'animations/idle.GIF';
     }

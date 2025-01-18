@@ -170,7 +170,9 @@ export default function Monkey() {
             : undefined
         }
         onDragStart={e => e.preventDefault()}>
-        {speechText && <SpeechBubble text={speechText} />}
+        {(speechText || storedData.state === 'thinking') && (
+          <SpeechBubble text={speechText} isThinking={storedData.state === 'thinking'} />
+        )}
         <MonkeyVisual
           selectedHat={selectedHat}
           direction={
@@ -182,6 +184,7 @@ export default function Monkey() {
           }
           state={storedData.state}
         />
+        {/* <div className="pt-4">{storedData.state}</div> */}
       </div>
     </div>
   );
