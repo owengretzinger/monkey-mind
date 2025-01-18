@@ -9,9 +9,10 @@ export const SpeechBubble: React.FC<SpeechBubbleProps> = ({ text }) => {
     <div
       style={{
         position: 'absolute',
-        top: '-1.25rem',
-        left: '5rem',
-        zIndex: 9999,
+        bottom: '30px',
+        left: '100%',
+        marginLeft: '1rem',
+        zIndex: 9998,
       }}>
       <div
         style={{

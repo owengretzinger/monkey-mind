@@ -13,7 +13,7 @@ type MonkeyStorage = BaseStorage<Position> & {
 
 const storage = createStorage<Position>(
   'monkey-position',
-  { x: 100, y: 100 },
+  { x: -100, y: Math.floor(window.innerHeight * 0.25) },
   {
     storageEnum: StorageEnum.Local,
     liveUpdate: true,

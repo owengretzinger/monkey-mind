@@ -8,11 +8,12 @@ export default function Monkey() {
   const [position, setPosition] = useState(storedPosition);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [speechText, setSpeechText] = useState<string>(
-    'Hello I am monkey and i am very pleased to meet you :) my name is monkey and what is yours ?',
-  );
+
   const selectedHat = useStorage(hatStorage);
+
+  const [speechText, setSpeechText] = useState<string>('');
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isWalking, setIsWalking] = useState(true);
 
   useEffect(() => {
     console.log('runtime content view loaded');
@@ -49,29 +50,38 @@ export default function Monkey() {
     });
   };
 
-  const generateText = useCallback(async () => {
-    const pageContent = document.body.innerText;
-    const currentHat = HATS.find(h => h.id === selectedHat);
-    try {
-      const response = await fetch('http://localhost:3000/api/mascot/cheer', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          pageContent,
-          hat: currentHat,
-        }),
-      });
-      const data = await response.json();
-      setSpeechText(data.message);
-      setIsSpeaking(true);
-    } catch (error) {
-      console.error('Error generating text:', error);
-    } finally {
-      setTimeout(() => setIsSpeaking(false), 4000);
-    }
-  }, [selectedHat]);
+  const generateText = useCallback(
+    async (mock = false) => {
+      const pageContent = document.body.innerText;
+      const currentHat = HATS.find(h => h.id === selectedHat);
+      try {
+        if (mock) {
+          setIsSpeaking(true);
+          setSpeechText("Hello! I'm Monkey Mind. I'm here to help you focus.");
+        } else {
+          const response = await fetch('http://localhost:3000/api/mascot/cheer', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              pageContent,
+              hat: currentHat,
+            }),
+          });
+          const data = await response.json();
+          setIsSpeaking(true);
+          setSpeechText(data.message);
+        }
+      } catch (error) {
+        console.error('Error generating text:', error);
+      } finally {
+        setTimeout(() => setIsSpeaking(false), 4000);
+        setTimeout(() => setSpeechText(''), 10000);
+      }
+    },
+    [selectedHat],
+  );
 
   // Add message listener
   useEffect(() => {
@@ -83,6 +93,39 @@ export default function Monkey() {
     chrome.runtime.onMessage.addListener(messageListener);
     return () => chrome.runtime.onMessage.removeListener(messageListener);
   }, [generateText, selectedHat]);
+
+  // initial walk-in animation
+  useEffect(() => {
+    if (isWalking) {
+      const targetX = window.innerWidth / 4;
+      const duration = 300;
+      // const duration = 8000;
+      const startTime = Date.now();
+      const startX = -100;
+      const fixedY = Math.floor(window.innerHeight * 0.25); // Keep consistent Y position
+
+      const animate = () => {
+        const now = Date.now();
+        const progress = Math.min(1, (now - startTime) / duration);
+
+        if (progress < 1) {
+          const newX = startX + (targetX - startX) * progress;
+          const newPosition = { x: newX, y: fixedY };
+          setPosition(newPosition);
+          monkeyStorage.setPosition(newPosition);
+          requestAnimationFrame(animate);
+        } else {
+          const finalPosition = { x: targetX, y: fixedY };
+          setPosition(finalPosition);
+          monkeyStorage.setPosition(finalPosition);
+          setIsWalking(false);
+          generateText(true);
+        }
+      };
+      requestAnimationFrame(animate);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isWalking]); // don't want to re-run this effect on position change
 
   return (
     <div
@@ -103,19 +146,28 @@ export default function Monkey() {
           position: 'absolute',
           left: position.x,
           top: position.y,
-          cursor: 'move',
-          pointerEvents: 'auto',
+          cursor: isWalking ? 'default' : 'move',
+          pointerEvents: isWalking ? 'none' : 'auto',
           userSelect: 'none',
         }}
         className="relative"
-        onMouseDown={handleMouseDown}
-        onKeyDown={e => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            handleMouseDown(e as unknown as React.MouseEvent);
-          }
-        }}>
+        onMouseDown={!isWalking ? handleMouseDown : undefined}
+        onKeyDown={
+          !isWalking
+            ? e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  handleMouseDown(e as unknown as React.MouseEvent);
+                }
+              }
+            : undefined
+        }>
         {speechText && <SpeechBubble text={speechText} />}
-        <MonkeyVisual selectedHat={selectedHat} size={64} speaking={isSpeaking} />
+        <MonkeyVisual
+          selectedHat={selectedHat}
+          direction={isWalking ? 'right' : 'left'}
+          speaking={isSpeaking}
+          isWalking={isWalking}
+        />
       </div>
     </div>
   );

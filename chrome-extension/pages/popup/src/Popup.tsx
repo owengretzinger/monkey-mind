@@ -18,7 +18,7 @@ const Popup = () => {
       <header className={`App-header text-amber-950`}>
         <div className="flex flex-col items-center justify-center space-y-4 p-4">
           <h1 className="">Monkey Mind</h1>
-          <MonkeyVisual selectedHat={selectedHat} size={64} />
+          <MonkeyVisual selectedHat={selectedHat} />
           <div className="">
             <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={generateMonkeyText}>
               Make Monkey Talk
@@ -36,7 +36,7 @@ const Popup = () => {
                   style={{
                     backgroundImage: `url(${chrome.runtime.getURL(`hats/${hat.id}.PNG`)})`,
                     backgroundSize: '150%',
-                    backgroundPosition: 'top 0 right 10%'
+                    backgroundPosition: 'top 0 right 10%',
                   }}
                   onClick={() => hatStorage.setHat(hat.id)}></button>
               ))}
