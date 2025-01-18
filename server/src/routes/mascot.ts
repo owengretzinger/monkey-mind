@@ -210,4 +210,66 @@ router.post("/pageswitch", async (req: Request, res: Response) => {
   }
 });
 
+// New switch endpoint with single OpenAI call
+router.post("/switch", async (req: Request, res: Response) => {
+  try {
+    const { currentContent, currentUrl, previousContent, previousUrl, hat } = req.body;
+
+    if (!currentContent || !previousContent) {
+      return res.status(400).json({ error: "Both current and previous page content are required" });
+    }
+
+    const personalityDesc = hat?.description || "friendly and supportive";
+    const prompt = `You are a Gen Z mascot (like a cute supportive friend) helping someone browse the web.
+        Your personality: ${personalityDesc}
+
+        The user just switched from:
+        Previous URL: ${previousUrl}
+        Previous content: ${previousContent.substring(0, 500)}
+
+        To:
+        Current URL: ${currentUrl}
+        Current content: ${currentContent.substring(0, 500)}
+
+        Analyze this transition and respond with a message that:
+        1. First, understand what kind of content they switched from and to (e.g., from study material to entertainment, from social media to job applications, etc.)
+        2. Based on the nature of the transition:
+           - If switching from productive to non-productive: Express playful disappointment
+           - If switching from non-productive to productive: Show excitement and pride
+           - If staying productive: Maintain enthusiasm and encourage
+           - If staying non-productive: Express increasing concern
+           - For any other interesting transitions: Acknowledge the specific change
+
+        Your response should:
+        - Be 1-2 sentences max
+        - Use natural Gen Z language and slang (but don't overdo it)
+        - Include relevant emojis occasionally
+        - Reference specific details from their browsing
+        - Match your personality type
+        - Sound like a supportive friend, not a formal assistant
+        - Keep it playful but genuine
+
+        Examples of tone (but create new ones):
+        "bestie, you're literally trading quantum physics for cat videos rn? 😭 the academic girlboss era was serving"
+        "going from twitter drama to leetcode grinding?? we love this character development fr fr 📚✨"
+        "the way you're jumping from one research paper to another... intellectual slay bestie! 🧠"
+
+        Make it sound natural and supportive, not forced.`;
+
+    const completion = await openai.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "gpt-4o-mini",
+      max_tokens: 100,
+      temperature: 0.9,
+    });
+
+    const switchMessage = completion.choices[0].message.content;
+    res.json({ message: switchMessage });
+
+  } catch (error) {
+    console.error("Error generating switch response:", error);
+    res.status(500).json({ error: "Error generating mascot response" });
+  }
+});
+
 export default router;
