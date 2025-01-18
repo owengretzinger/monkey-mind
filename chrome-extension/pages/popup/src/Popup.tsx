@@ -3,11 +3,30 @@ import { useStorage, withErrorBoundary, withSuspense, MonkeyVisual } from '@exte
 import { HATS, hatStorage } from '@extension/storage';
 import { useAuth0 } from './auth/Auth0Provider';
 import { Login } from './components/Login';
+import { useState, useEffect } from 'react';
 
 const Popup = () => {
   const { isAuthenticated, isLoading, logout } = useAuth0();
+  const [authenticated, setAuthenticated] = useState(isAuthenticated);
   const selectedHat = useStorage(hatStorage);
   const currentHat = HATS.find(hat => hat.id === selectedHat) || HATS[0];
+
+  useEffect(() => {
+    setAuthenticated(isAuthenticated);
+  }, [isAuthenticated]);
+
+  const logoutHandler = () => {
+    logoutHelper({ federated: true });
+    fetch(`https://${process.env.REACT_APP_AUTH0_DOMAIN}/v2/logout?federated=true&client_id=${process.env.REACT_APP_AUTH0_CLIENT_ID}`, {
+      credentials: 'include',
+      mode: 'no-cors'
+    }).catch();
+  };
+
+  const logoutHelper = (options) => {
+    logout(options);
+    setAuthenticated(false);
+  };
 
   // Show loading state
   if (isLoading) {
@@ -72,11 +91,7 @@ const Popup = () => {
             </button>
             <button 
               className="rounded-xl bg-amber-900/15 px-2 py-1" 
-              onClick={() => logout({ 
-                logoutParams: {
-                  returnTo: window.location.origin 
-                }
-              })}
+              onClick={logoutHandler}
             >
               Log Out
             </button>
