@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useStorage } from '@extension/shared';
+import { monkeyStorage } from '@extension/storage';
 
 export default function Monkey() {
-  const [position, setPosition] = useState({ x: 100, y: 100 });
+  const storedPosition = useStorage(monkeyStorage);
+  const [position, setPosition] = useState(storedPosition);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
@@ -10,10 +13,12 @@ export default function Monkey() {
 
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging) {
-        setPosition({
+        const newPosition = {
           x: e.clientX + window.scrollX - dragOffset.x,
           y: e.clientY + window.scrollY - dragOffset.y,
-        });
+        };
+        setPosition(newPosition);
+        monkeyStorage.setPosition(newPosition);
       }
     };
 
