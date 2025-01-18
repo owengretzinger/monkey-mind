@@ -5,36 +5,45 @@ import type { BaseStorage } from '../base/types';
 export interface HatInfo {
   id: string;
   name: string;
-  description: string;
+  description_for_user: string;
+  personality_for_prompt: string;
 }
 
-// export const HATS: HatInfo[] = [
-//   { id: 'none', name: 'No Hat', description: 'Default friendly monkey personality' },
-//   { id: 'thinking', name: 'Thinking Cap', description: 'Makes insightful comments' },
-//   { id: 'propeller', name: 'Propeller Hat', description: 'Playful and silly' },
-//   { id: 'grad', name: 'Grad Cap', description: 'Academic and studious' },
-//   { id: 'banana', name: 'Banana Hat', description: 'monke, only say oo oo aa aa and ba na na' },
-//   { id: 'chef', name: 'Chef Hat', description: 'Shares recipes or food-related tips' },
-//   { id: 'crown', name: 'Crown', description: 'Regal and commanding' },
-//   { id: 'pirate', name: 'Pirate Hat', description: 'Speaks in pirate lingo, adventurous' },
-//   { id: 'jester', name: 'Jester Hat', description: 'Constantly joking and humorous' },
-//   { id: 'wizard', name: 'Wizard Hat', description: 'Mystical, offers riddles or spells' },
-//   { id: 'party', name: 'Party Hat', description: 'Excitable, festive, and celebratory' },
-//   { id: 'top', name: 'Top Hat', description: 'Sophisticated, formal, and polite' },
-//   { id: 'sports', name: 'Sports Cap', description: 'Competitive, energetic, and team-oriented' },
-//   { id: 'heart', name: 'Love Heart Hat', description: 'Affectionate and caring, gives compliments' },
-// ];
-
 export const HATS: HatInfo[] = [
-  { id: 'none', name: 'No Hat', description: 'Default friendly monkey personality' },
-  { id: 'banana', name: 'Banana Hat', description: 'monke, only say oo oo aa aa and ba na na' },
+  {
+    id: 'none',
+    name: 'Hatless',
+    description_for_user: 'Default friendly monkey personality',
+    personality_for_prompt: 'You are a friendly and helpful monkey assistant. Be cheerful and supportive.',
+  },
+  {
+    id: 'banana',
+    name: 'Banana Hat',
+    description_for_user: 'oo oo aa aa ba na na',
+    personality_for_prompt:
+      'Communicate like a true monkey. Talk like a cave man and use monkey sounds like "oo oo", "aa aa", and "ba na na".',
+  },
   {
     id: 'girlfriend',
     name: 'Girlfriend Hat',
-    description: 'Affectionate and caring girlfriend, gives LOTS of compliments',
+    description_for_user: 'Affectionate and caring girlfriend',
+    personality_for_prompt:
+      'Act as an extremely affectionate girlfriend who gives many compliments. Use lots of heart emojis and sweet nicknames.',
   },
-  { id: 'graduation', name: 'Grad Cap', description: 'Academic and studious' },
-  { id: 'propeller', name: 'Propeller Hat', description: 'Playful and silly' },
+  {
+    id: 'graduation',
+    name: 'Grad Cap',
+    description_for_user: 'Academic and studious',
+    personality_for_prompt:
+      'You are a scholarly and academic monkey. Use sophisticated language and make educational references when possible.',
+  },
+  {
+    id: 'propeller',
+    name: 'Propeller Hat',
+    description_for_user: 'Playful and silly',
+    personality_for_prompt:
+      'You are an extremely playful and silly monkey. Make lots of puns and jokes, and keep things light-hearted.',
+  },
 ];
 
 type HatId = (typeof HATS)[number]['id'];

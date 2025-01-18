@@ -14,23 +14,46 @@ if (!process.env.OPENAI_API_KEY) {
 
 // Define page categories and their productivity levels
 const PAGE_CATEGORIES = {
-  ACADEMIC: ['arxiv.org', 'scholar.google', 'research', 'paper', 'academic', 'study'],
-  DOCUMENTATION: ['docs.', 'documentation', 'learn', 'tutorial', 'guide'],
-  PRODUCTIVITY: ['github.com', 'gitlab.com', 'stackoverflow.com', 'coding'],
-  ENTERTAINMENT: ['tiktok', 'youtube.com', 'instagram.com', 'facebook.com', 'twitter.com', 'reddit.com'],
-  SHOPPING: ['amazon.com', 'shopping', 'store'],
-  NEWS: ['news', 'current events', 'articles']
+  ACADEMIC: [
+    "arxiv.org",
+    "scholar.google",
+    "research",
+    "paper",
+    "academic",
+    "study",
+  ],
+  DOCUMENTATION: ["docs.", "documentation", "learn", "tutorial", "guide"],
+  PRODUCTIVITY: ["github.com", "gitlab.com", "stackoverflow.com", "coding"],
+  ENTERTAINMENT: [
+    "tiktok",
+    "youtube.com",
+    "instagram.com",
+    "facebook.com",
+    "twitter.com",
+    "reddit.com",
+  ],
+  SHOPPING: ["amazon.com", "shopping", "store"],
+  NEWS: ["news", "current events", "articles"],
 } as const;
 
 // Helper function to categorize a page based on content and URL
-async function categorizePage(content: string, url: string, openaiClient: OpenAI): Promise<string[]> {
+async function categorizePage(
+  content: string,
+  url: string,
+  openaiClient: OpenAI
+): Promise<string[]> {
   // First try the predefined categories
   const categories: string[] = [];
   const lowerContent = content.toLowerCase();
   const lowerUrl = url.toLowerCase();
 
   Object.entries(PAGE_CATEGORIES).forEach(([category, keywords]) => {
-    if (keywords.some(keyword => lowerContent.includes(keyword) || lowerUrl.includes(keyword))) {
+    if (
+      keywords.some(
+        (keyword) =>
+          lowerContent.includes(keyword) || lowerUrl.includes(keyword)
+      )
+    ) {
       categories.push(category);
     }
   });
@@ -65,14 +88,14 @@ async function categorizePage(content: string, url: string, openaiClient: OpenAI
       });
 
       const aiCategories = completion.choices[0].message.content
-        ?.split(',')
-        .map(cat => cat.trim())
-        .filter(cat => cat.length > 0);
+        ?.split(",")
+        .map((cat) => cat.trim())
+        .filter((cat) => cat.length > 0);
 
-      return aiCategories || ['UNKNOWN'];
+      return aiCategories || ["UNKNOWN"];
     } catch (error) {
-      console.error('Error in AI categorization:', error);
-      return ['UNKNOWN'];
+      console.error("Error in AI categorization:", error);
+      return ["UNKNOWN"];
     }
   }
 
@@ -81,19 +104,27 @@ async function categorizePage(content: string, url: string, openaiClient: OpenAI
 
 // Helper function to determine productivity transition
 function analyzeTransition(prevCategories: string[], newCategories: string[]) {
-  const productiveCategories = ['ACADEMIC', 'DOCUMENTATION', 'PRODUCTIVITY'];
-  const nonProductiveCategories = ['ENTERTAINMENT', 'SHOPPING'];
+  const productiveCategories = ["ACADEMIC", "DOCUMENTATION", "PRODUCTIVITY"];
+  const nonProductiveCategories = ["ENTERTAINMENT", "SHOPPING"];
 
-  const wasProd = prevCategories.some(cat => productiveCategories.includes(cat));
-  const wasNonProd = prevCategories.some(cat => nonProductiveCategories.includes(cat));
-  const isProd = newCategories.some(cat => productiveCategories.includes(cat));
-  const isNonProd = newCategories.some(cat => nonProductiveCategories.includes(cat));
+  const wasProd = prevCategories.some((cat) =>
+    productiveCategories.includes(cat)
+  );
+  const wasNonProd = prevCategories.some((cat) =>
+    nonProductiveCategories.includes(cat)
+  );
+  const isProd = newCategories.some((cat) =>
+    productiveCategories.includes(cat)
+  );
+  const isNonProd = newCategories.some((cat) =>
+    nonProductiveCategories.includes(cat)
+  );
 
   return {
     productiveToNonProductive: wasProd && isNonProd,
     nonProductiveToProductive: wasNonProd && isProd,
     stayedProductive: wasProd && isProd,
-    stayedNonProductive: wasNonProd && isNonProd
+    stayedNonProductive: wasNonProd && isNonProd,
   };
 }
 
@@ -104,15 +135,16 @@ const openai = new OpenAI({
 // Original cheer endpoint
 router.post("/cheer", async (req: Request, res: Response) => {
   try {
-    const { pageContent, hat } = req.body;
+    const { pageContent, personality } = req.body;
 
     if (!pageContent) {
       return res.status(400).json({ error: "Page content is required" });
     }
 
-    const personalityDesc = hat?.description || "friendly and supportive";
+    console.log(personality);
+
     const prompt = `You are a Gen Z mascot (like a cute supportive friend) helping someone browse the web.
-        Your personality: ${personalityDesc}
+        Your personality: ${personality}
         
         Current webpage:
         Content: ${pageContent.substring(0, 1000)}
@@ -143,15 +175,26 @@ router.post("/cheer", async (req: Request, res: Response) => {
 // New pageswitch endpoint
 router.post("/pageswitch", async (req: Request, res: Response) => {
   try {
-    const { currentContent, currentUrl, previousContent, previousUrl, hat } = req.body;
+    const { currentContent, currentUrl, previousContent, previousUrl, hat } =
+      req.body;
 
     if (!currentContent || !previousContent) {
-      return res.status(400).json({ error: "Both current and previous page content are required" });
+      return res
+        .status(400)
+        .json({ error: "Both current and previous page content are required" });
     }
 
     // Categorize current and previous pages using AI-enhanced categorization
-    const currentCategories = await categorizePage(currentContent, currentUrl, openai);
-    const previousCategories = await categorizePage(previousContent, previousUrl, openai);
+    const currentCategories = await categorizePage(
+      currentContent,
+      currentUrl,
+      openai
+    );
+    const previousCategories = await categorizePage(
+      previousContent,
+      previousUrl,
+      openai
+    );
 
     // Analyze the transition
     const transition = analyzeTransition(previousCategories, currentCategories);
@@ -160,12 +203,12 @@ router.post("/pageswitch", async (req: Request, res: Response) => {
     const prompt = `You are a Gen Z mascot (like a cute supportive friend) helping someone browse the web.
         Your personality: ${personalityDesc}
         
-        Previous page categories: ${previousCategories.join(', ')}
-        Current page categories: ${currentCategories.join(', ')}
+        Previous page categories: ${previousCategories.join(", ")}
+        Current page categories: ${currentCategories.join(", ")}
         Transition type: ${Object.entries(transition)
           .filter(([_, value]) => value)
           .map(([key]) => key)
-          .join(', ')}
+          .join(", ")}
 
         Current webpage:
         Content: ${currentContent.substring(0, 1000)}
@@ -198,12 +241,11 @@ router.post("/pageswitch", async (req: Request, res: Response) => {
     });
 
     const switchMessage = completion.choices[0].message.content;
-    res.json({ 
+    res.json({
       message: switchMessage,
       categories: currentCategories,
-      transition: transition
+      transition: transition,
     });
-
   } catch (error) {
     console.error("Error generating page switch response:", error);
     res.status(500).json({ error: "Error generating mascot response" });
@@ -213,10 +255,13 @@ router.post("/pageswitch", async (req: Request, res: Response) => {
 // New switch endpoint with single OpenAI call
 router.post("/switch", async (req: Request, res: Response) => {
   try {
-    const { currentContent, currentUrl, previousContent, previousUrl, hat } = req.body;
+    const { currentContent, currentUrl, previousContent, previousUrl, hat } =
+      req.body;
 
     if (!currentContent || !previousContent) {
-      return res.status(400).json({ error: "Both current and previous page content are required" });
+      return res
+        .status(400)
+        .json({ error: "Both current and previous page content are required" });
     }
 
     const personalityDesc = hat?.description || "friendly and supportive";
@@ -265,7 +310,6 @@ router.post("/switch", async (req: Request, res: Response) => {
 
     const switchMessage = completion.choices[0].message.content;
     res.json({ message: switchMessage });
-
   } catch (error) {
     console.error("Error generating switch response:", error);
     res.status(500).json({ error: "Error generating mascot response" });
