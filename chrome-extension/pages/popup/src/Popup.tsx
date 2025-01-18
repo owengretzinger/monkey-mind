@@ -6,7 +6,7 @@ import { Login } from './components/Login';
 import { useState, useEffect } from 'react';
 
 const Popup = () => {
-  const { isAuthenticated, isLoading, logout } = useAuth0();
+  const { isAuthenticated, isLoading, logout, user } = useAuth0();
   const [, setAuthenticated] = useState(isAuthenticated);
   const selectedHat = useStorage(hatStorage);
   const currentHat = HATS.find(hat => hat.id === selectedHat) || HATS[0];
@@ -14,6 +14,46 @@ const Popup = () => {
   useEffect(() => {
     setAuthenticated(isAuthenticated);
   }, [isAuthenticated]);
+
+
+
+
+  const writeToDatabase = async (userData: any) => {
+    const apiUrl = "http://localhost:3000/api/users/newUser";
+    console.log(userData)
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Error writing to database:', errorData);
+    } else {
+      const responseData = await response.json();
+      console.log('User data written successfully:', responseData);
+    }
+  };
+
+
+
+  // Effect to write to the database when authenticated
+  useEffect(() => {
+    console.log(isLoading, isAuthenticated, user, "youasdf af");
+
+    // Check if not loading and authenticated
+    if (!isLoading && isAuthenticated && user) {
+      console.log(isLoading, isAuthenticated, user, "you are stupdi af");
+      writeToDatabase({
+        email: user.email,
+        name: user.name,
+      });
+    }
+  }, [isAuthenticated]); 
+
 
   // const logoutHandler = () => {
   //   logoutHelper({ federated: true });
@@ -60,6 +100,22 @@ const Popup = () => {
     <div className={`App bg-slate-50`}>
       <header className={`App-header text-amber-950`}>
         <div className="flex flex-col items-center justify-center space-y-2 p-4">
+          {user && (
+            <div className="flex items-center space-x-2 mb-2">
+              {user.picture && (
+                <img 
+                  src={user.picture} 
+                  alt="Profile" 
+                  className="w-8 h-8 rounded-full"
+                />
+              )}
+              <div className="text-left">
+                <p className="text-sm font-medium text-amber-900">{user.name}</p>
+                <p className="text-xs text-amber-900/75">{user.email}</p>
+              </div>
+            </div>
+          )}
+
           <MonkeyVisual selectedHat={selectedHat} state="idle" />
 
           <div className="pb-1 text-center">
