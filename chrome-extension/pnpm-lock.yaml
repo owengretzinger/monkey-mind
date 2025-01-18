@@ -429,6 +429,9 @@ importers:
 
   pages/popup:
     dependencies:
+      '@auth0/auth0-spa-js':
+        specifier: 2.1.3
+        version: 2.1.3
       '@extension/content-runtime-script':
         specifier: workspace:*
         version: link:../content-runtime
@@ -512,6 +515,9 @@ packages:
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
+
+  '@auth0/auth0-spa-js@2.1.3':
+    resolution: {integrity: sha512-NMTBNuuG4g3rame1aCnNS5qFYIzsTUV5qTFPRfTyYFS1feS6jsCBR+eTq9YkxCp1yuoM2UIcjunPaoPl77U9xQ==}
 
   '@babel/code-frame@7.24.7':
     resolution: {integrity: sha512-BcYH1CVJBO9tvyIZ2jVeXgSIMvGZ2FDRvDdOIVQyuklNKSsx+eppDEBq/g47Ayw+RqNFE+URvOShmf+f/qwAlA==}
@@ -4332,6 +4338,8 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
+  '@auth0/auth0-spa-js@2.1.3': {}
+
   '@babel/code-frame@7.24.7':
     dependencies:
       '@babel/highlight': 7.24.7
@@ -5119,7 +5127,7 @@ snapshots:
 
   '@wdio/globals@9.4.5(@wdio/logger@9.4.4)':
     optionalDependencies:
-      expect-webdriverio: 5.0.2(@wdio/globals@9.4.5(@wdio/logger@9.1.0))(@wdio/logger@9.4.4)(webdriverio@9.4.5)
+      expect-webdriverio: 5.0.2(@wdio/globals@9.4.5(@wdio/logger@9.4.4))(@wdio/logger@9.4.4)(webdriverio@9.4.5)
       webdriverio: 9.4.5
     transitivePeerDependencies:
       - '@wdio/logger'
@@ -6460,10 +6468,10 @@ snapshots:
       webdriverio: 9.4.5
     optional: true
 
-  expect-webdriverio@5.0.2(@wdio/globals@9.4.5(@wdio/logger@9.1.0))(@wdio/logger@9.4.4)(webdriverio@9.4.5):
+  expect-webdriverio@5.0.2(@wdio/globals@9.4.5(@wdio/logger@9.4.4))(@wdio/logger@9.4.4)(webdriverio@9.4.5):
     dependencies:
       '@vitest/snapshot': 2.0.5
-      '@wdio/globals': 9.4.5(@wdio/logger@9.1.0)
+      '@wdio/globals': 9.4.5(@wdio/logger@9.4.4)
       '@wdio/logger': 9.4.4
       expect: 29.7.0
       jest-matcher-utils: 29.7.0

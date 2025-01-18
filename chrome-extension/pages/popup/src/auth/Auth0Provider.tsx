@@ -1,5 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { createAuth0Client, Auth0Client, User } from '@auth0/auth0-spa-js';
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import { createAuth0Client } from '@auth0/auth0-spa-js';
+import type { Auth0Client, User } from '@auth0/auth0-spa-js';
 
 interface Auth0ContextType {
   isAuthenticated: boolean;
@@ -37,7 +39,7 @@ export const Auth0Provider = ({ children }: Auth0ProviderProps) => {
         console.log('Initializing Auth0...');
         const extensionUrl = chrome.runtime.getURL('popup.html');
         console.log('Extension URL:', extensionUrl); // Debug log
-        
+
         const client = await createAuth0Client({
           domain: 'dev-xwr5wf24ald2p0la.us.auth0.com',
           clientId: 'fJxFAp9DABaE2WTkNEvScV9XQ2ZQrBwL',
@@ -51,8 +53,8 @@ export const Auth0Provider = ({ children }: Auth0ProviderProps) => {
           useFormData: true,
           auth0Client: {
             name: 'monkey-chat-extension',
-            version: '1.0.0'
-          }
+            version: '1.0.0',
+          },
         });
 
         setAuth0Client(client);
@@ -93,15 +95,10 @@ export const Auth0Provider = ({ children }: Auth0ProviderProps) => {
           authorizationParams: {
             redirect_uri: chrome.runtime.getURL('popup.html'),
             response_type: 'token id_token',
-            scope: 'openid profile email'
+            scope: 'openid profile email',
           },
-          popup: {
-            width: 400,
-            height: 600,
-            timeoutInSeconds: 120
-          }
         });
-        
+
         const isAuth = await auth0Client.isAuthenticated();
         if (isAuth) {
           const user = await auth0Client.getUser();
@@ -125,8 +122,8 @@ export const Auth0Provider = ({ children }: Auth0ProviderProps) => {
     if (auth0Client) {
       await auth0Client.logout({
         logoutParams: {
-          returnTo: chrome.runtime.getURL('popup.html')
-        }
+          returnTo: chrome.runtime.getURL('popup.html'),
+        },
       });
     }
   };
@@ -139,10 +136,9 @@ export const Auth0Provider = ({ children }: Auth0ProviderProps) => {
         isLoading,
         loginWithRedirect,
         logout,
-        error
-      }}
-    >
+        error,
+      }}>
       {children}
     </Auth0Context.Provider>
   );
-}; 
+};
