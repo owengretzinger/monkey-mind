@@ -1,5 +1,5 @@
 import '@src/Popup.css';
-import { useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
+import { useStorage, withErrorBoundary, withSuspense, MonkeyVisual } from '@extension/shared';
 import { HATS, hatStorage } from '@extension/storage';
 
 const Popup = () => {
@@ -18,16 +18,7 @@ const Popup = () => {
       <header className={`App-header text-amber-950`}>
         <div className="flex flex-col items-center justify-center space-y-4 p-4">
           <h1 className="">Monkey Mind</h1>
-          <div className="relative">
-            <img src={chrome.runtime.getURL('monkey.png')} alt="logo" className="size-16" />
-            {currentHat && (
-              <img
-                src={chrome.runtime.getURL(`hats/${currentHat.id}.PNG`)}
-                alt={currentHat.name}
-                className="absolute inset-0 size-16"
-              />
-            )}
-          </div>
+          <MonkeyVisual selectedHat={selectedHat} size={64} />
           <div className="">
             <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={generateMonkeyText}>
               Make Monkey Talk

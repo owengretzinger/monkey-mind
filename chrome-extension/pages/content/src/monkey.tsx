@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useStorage } from '@extension/shared';
+import { useStorage, MonkeyVisual } from '@extension/shared';
 import { monkeyStorage, hatStorage, HATS } from '@extension/storage';
 import { SpeechBubble } from './components/SpeechBubble';
 
@@ -12,6 +12,7 @@ export default function Monkey() {
     'Hello I am monkey and i am very pleased to meet you :) my name is monkey and what is yours ?',
   );
   const selectedHat = useStorage(hatStorage);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   useEffect(() => {
     console.log('runtime content view loaded');
@@ -64,8 +65,11 @@ export default function Monkey() {
       });
       const data = await response.json();
       setSpeechText(data.message);
+      setIsSpeaking(true);
     } catch (error) {
       console.error('Error generating text:', error);
+    } finally {
+      setTimeout(() => setIsSpeaking(false), 4000);
     }
   }, [selectedHat]);
 
@@ -111,34 +115,7 @@ export default function Monkey() {
           }
         }}>
         {speechText && <SpeechBubble text={speechText} />}
-        <div className="relative">
-          <img
-            src={chrome.runtime.getURL('monkey.png')}
-            alt="Monkey"
-            style={{
-              width: '64px',
-              height: '64px',
-              pointerEvents: 'none',
-              userSelect: 'none',
-            }}
-            draggable={false}
-          />
-          {selectedHat && (
-            <img
-              src={chrome.runtime.getURL(`hats/${selectedHat}.PNG`)}
-              alt="Hat"
-              style={{
-                position: 'absolute',
-                inset: 0,
-                width: '64px',
-                height: '64px',
-                pointerEvents: 'none',
-                userSelect: 'none',
-              }}
-              draggable={false}
-            />
-          )}
-        </div>
+        <MonkeyVisual selectedHat={selectedHat} size={64} speaking={isSpeaking} />
       </div>
     </div>
   );

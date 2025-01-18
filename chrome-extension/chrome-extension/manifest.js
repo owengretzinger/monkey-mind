@@ -73,7 +73,7 @@ const manifest = withSidePanel({
   devtools_page: 'devtools/index.html',
   web_accessible_resources: [
     {
-      resources: ['*.js', '*.css', '*.svg', 'monkey.png', '*.PNG'],
+      resources: ['*.js', '*.css', '*.svg', 'monkey.png', '*.PNG', '*.GIF'],
       matches: ['*://*/*'],
     },
   ],
