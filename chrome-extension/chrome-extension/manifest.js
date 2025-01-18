@@ -33,12 +33,6 @@ const manifest = withSidePanel({
   manifest_version: 3,
   default_locale: 'en',
 
-  _locales: {
-    en: {
-      messages: '../_locales/en/messages.json',
-    },
-  },
-
   /**
    * if you want to support multiple languages, you can use the following reference
    * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Internationalization

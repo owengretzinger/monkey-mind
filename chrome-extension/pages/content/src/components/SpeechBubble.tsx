@@ -28,7 +28,14 @@ export const SpeechBubble: React.FC<SpeechBubbleProps> = ({ text, isThinking }) 
           border: '1px solid #78350f',
         }}>
         {isThinking ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', marginTop: '0.8rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.25rem',
+              marginTop: '0.2rem',
+            }}>
             {[0, 1, 2].map(i => (
               <div
                 key={i}
