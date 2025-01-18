@@ -72,11 +72,7 @@ const Popup = () => {
             </button>
             <button 
               className="rounded-xl bg-amber-900/15 px-2 py-1" 
-              onClick={() => logout({ 
-                logoutParams: {
-                  returnTo: window.location.origin 
-                }
-              })}
+              onClick={() => logout()}
             >
               Log Out
             </button>
