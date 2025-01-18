@@ -5,9 +5,19 @@ export interface UserPresence {
     url: string;
 }
 
+export interface MonkeyPosition {
+    id: string;
+    position: {
+        x: number;
+        y: number;
+    };
+    state: string;
+    url: string;
+}
+
 export interface WebSocketMessage {
-    type: 'presence' | 'chat';
-    data: UserPresence | any;
+    type: 'presence' | 'chat' | 'monkey_position' | 'monkey_left';
+    data: UserPresence | MonkeyPosition | any;
 }
 
 export interface ExtendedWebSocket extends WebSocket {

@@ -4,15 +4,19 @@ import { monkeyStateStorage, hatStorage } from '@extension/storage';
 import { SpeechBubble } from './components/SpeechBubble';
 import { useDraggable } from './hooks/useDraggable';
 import { useMonkeyText } from './hooks/useMonkeyText';
+import { OtherMonkeys } from './components/OtherMonkeys';
+import { useState } from 'react';
 
 const SPEED = 150; // pixels per second
 const WALKING_TIME = 5000; // milliseconds
+const WS_URL = 'ws://localhost:3000'; // Adjust this URL as needed
 
 export default function Monkey() {
   const storedData = useStorage(monkeyStateStorage);
   const { handleMouseDown } = useDraggable(storedData.position, monkeyStateStorage);
   const selectedHat = useStorage(hatStorage);
   const { speechText, generateText } = useMonkeyText(selectedHat);
+  const [otherMonkeys, setOtherMonkeys] = useState<Record<string, any>>({});
 
   const getTargetPosition = () => {
     const startPosition = storedData.position;
@@ -127,6 +131,70 @@ export default function Monkey() {
     return () => chrome.runtime.onMessage.removeListener(messageListener);
   }, [storedData.position.x, storedData.position.y]);
 
+  // Add WebSocket connection and position tracking
+  useEffect(() => {
+    const ws = new WebSocket(WS_URL);
+    
+    ws.onopen = () => {
+      console.log('WebSocket Connected');
+      // Send initial presence with a unique ID
+      const clientId = Math.random().toString(36).substring(7);
+      ws.send(JSON.stringify({
+        type: 'monkey_position',
+        data: {
+          id: clientId,
+          position: storedData.position,
+          state: storedData.state,
+          url: window.location.href
+        }
+      }));
+    };
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      if (message.type === 'monkey_position') {
+        const { id, position, state } = message.data;
+        setOtherMonkeys(prev => ({
+          ...prev,
+          [id]: { position, state }
+        }));
+      } else if (message.type === 'monkey_left') {
+        const { id } = message.data;
+        setOtherMonkeys(prev => {
+          const newMonkeys = { ...prev };
+          delete newMonkeys[id];
+          return newMonkeys;
+        });
+      }
+    };
+
+    // Function to send position updates
+    const sendPositionUpdate = () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'monkey_position',
+          data: {
+            position: storedData.position,
+            state: storedData.state,
+            url: window.location.href
+          }
+        }));
+      }
+    };
+
+    // Send position updates whenever position or state changes
+    sendPositionUpdate();
+
+    // Set up position update interval
+    const updateInterval = setInterval(sendPositionUpdate, 1000);
+
+    // Cleanup
+    return () => {
+      clearInterval(updateInterval);
+      ws.close();
+    };
+  }, [storedData.position, storedData.state]);
+
   return (
     <div
       style={{
@@ -141,6 +209,7 @@ export default function Monkey() {
       }}
       draggable={false}
       onDragStart={e => e.preventDefault()}>
+      <OtherMonkeys monkeys={otherMonkeys} />
       <div
         role="button"
         tabIndex={0}

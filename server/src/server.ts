@@ -8,7 +8,7 @@ import morgan from 'morgan';
 import { connectDB } from './config/database';
 import noteRoutes from './routes/notes';
 import newUser from "./routes/newUser";
-import { ExtendedWebSocket, WebSocketMessage, UserPresence } from './types/messages';
+import { ExtendedWebSocket, WebSocketMessage, UserPresence, MonkeyPosition } from './types/messages';
 import mascotRoutes from './routes/mascot';
 
 dotenv.config();
@@ -43,9 +43,14 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Hello World!');
 });
 
-// WebSocket connection handler
+// Add a map to track monkeys by URL
+const monkeysByUrl = new Map<string, Map<string, MonkeyPosition>>();
+
+// Update WebSocket connection handler
 wss.on('connection', (ws: ExtendedWebSocket) => {
     console.log('New client connected');
+    let currentUrl: string | null = null;
+    let clientId: string | null = null;
     let userPresence: UserPresence | null = null;
 
     // Set up heartbeat
@@ -70,9 +75,42 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
             const message: WebSocketMessage = JSON.parse(data.toString());
             
             switch (message.type) {
+                case 'monkey_position':
+                    const monkeyData = message.data as MonkeyPosition;
+                    const { url, id } = monkeyData;
+                    clientId = id;
+
+                    // Remove monkey from old URL if it changed
+                    if (currentUrl && currentUrl !== url) {
+                        const oldUrlMonkeys = monkeysByUrl.get(currentUrl);
+                        if (oldUrlMonkeys) {
+                            oldUrlMonkeys.delete(id);
+                            if (oldUrlMonkeys.size === 0) {
+                                monkeysByUrl.delete(currentUrl);
+                            }
+                        }
+                    }
+
+                    // Add/update monkey in new URL
+                    if (!monkeysByUrl.has(url)) {
+                        monkeysByUrl.set(url, new Map());
+                    }
+                    monkeysByUrl.get(url)!.set(id, monkeyData);
+                    currentUrl = url;
+
+                    // Only broadcast to clients on the same URL
+                    wss.clients.forEach(client => {
+                        if (client !== ws && client.readyState === WebSocket.OPEN) {
+                            client.send(JSON.stringify({
+                                type: 'monkey_position',
+                                data: monkeyData
+                            }));
+                        }
+                    });
+                    break;
+
                 case 'presence':
                     userPresence = message.data as UserPresence;
-                    // Broadcast to other clients on the same page
                     wss.clients.forEach(client => {
                         if (client !== ws && client.readyState === WebSocket.OPEN) {
                             client.send(JSON.stringify({
@@ -84,11 +122,8 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
                     break;
                     
                 case 'chat':
-                    // Only broadcast if we have user presence info
                     if (!userPresence) return;
-                    
-                    // At this point TypeScript knows userPresence is not null
-                    const presenceData = userPresence; // Create a non-null reference
+                    const presenceData = userPresence;
                     
                     wss.clients.forEach(client => {
                         if (client !== ws && client.readyState === WebSocket.OPEN) {
@@ -96,7 +131,7 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
                                 type: 'chat',
                                 data: {
                                     ...message.data,
-                                    userId: presenceData.userId // Use the non-null reference
+                                    userId: presenceData.userId
                                 }
                             }));
                         }
@@ -110,8 +145,26 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
 
     // Handle client disconnection
     ws.on('close', () => {
+        if (currentUrl && clientId) {
+            const urlMonkeys = monkeysByUrl.get(currentUrl);
+            if (urlMonkeys) {
+                urlMonkeys.delete(clientId);
+                if (urlMonkeys.size === 0) {
+                    monkeysByUrl.delete(currentUrl);
+                }
+                
+                // Notify other clients that this monkey left
+                wss.clients.forEach(client => {
+                    if (client !== ws && client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({
+                            type: 'monkey_left',
+                            data: { id: clientId }
+                        }));
+                    }
+                });
+            }
+        }
         clearInterval(interval);
-        console.log('Client disconnected');
     });
 });
 
