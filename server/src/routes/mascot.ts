@@ -59,7 +59,7 @@ async function categorizePage(content: string, url: string, openaiClient: OpenAI
 
       const completion = await openaiClient.chat.completions.create({
         messages: [{ role: "user", content: prompt }],
-        model: "gpt-4-turbo-preview",
+        model: "gpt-4o-mini",
         max_tokens: 50,
         temperature: 0.3,
       });
@@ -127,7 +127,7 @@ router.post("/cheer", async (req: Request, res: Response) => {
 
     const completion = await openai.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "gpt-4-turbo-preview",
+      model: "gpt-4o-mini",
       max_tokens: 100,
       temperature: 0.9,
     });
