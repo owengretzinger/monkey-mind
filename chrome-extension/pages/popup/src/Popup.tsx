@@ -5,7 +5,7 @@ import { useAuth0 } from './auth/Auth0Provider';
 import { Login } from './components/Login';
 
 const Popup = () => {
-  const { isAuthenticated, isLoading } = useAuth0();
+  const { isAuthenticated, isLoading, logout } = useAuth0();
   const selectedHat = useStorage(hatStorage);
   const currentHat = HATS.find(hat => hat.id === selectedHat) || HATS[0];
 
@@ -69,6 +69,16 @@ const Popup = () => {
             </button>
             <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={callMonkey}>
               Come Here!
+            </button>
+            <button 
+              className="rounded-xl bg-amber-900/15 px-2 py-1" 
+              onClick={() => logout({ 
+                logoutParams: {
+                  returnTo: window.location.origin 
+                }
+              })}
+            >
+              Log Out
             </button>
           </div>
         </div>
