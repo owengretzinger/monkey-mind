@@ -6,8 +6,12 @@
   },
   "permissions": [
     "storage",
+    "scripting",
     "tabs",
-    "identity"
+    "notifications",
+    "webNavigation",
+    "background",
+    "offscreen"
   ],
   "host_permissions": [
     "https://*.auth0.com/*"

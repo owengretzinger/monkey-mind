@@ -6,7 +6,7 @@ import { useDraggable } from './hooks/useDraggable';
 import { useMonkeyText } from './hooks/useMonkeyText';
 
 const SPEED = 150; // pixels per second
-const WALKING_TIME = 1000; // milliseconds
+const WALKING_TIME = 5000; // milliseconds
 
 export default function Monkey() {
   const storedData = useStorage(monkeyStateStorage);
@@ -14,22 +14,14 @@ export default function Monkey() {
   const selectedHat = useStorage(hatStorage);
   const { speechText, generateText } = useMonkeyText(selectedHat);
 
-  // Move startPosition out of the effect so it can be used in JSX
-  const startPosition = storedData.position;
-
   const getTargetPosition = () => {
+    const startPosition = storedData.position;
     let targetX;
-    let targetY;
 
-    if (storedData.state === 'leaving') {
-      // If leaving, exit through nearest edge
-      targetX = startPosition.x < window.innerWidth / 2 ? -100 : window.innerWidth + 100;
-      targetY = startPosition.y;
-    } else {
-      // If walking in, go to nearest quarter horizontally and ensure visible vertically
+    if (storedData.state === 'walking') {
+      // If walking in, go to nearest quarter horizontally
       const leftQuarter = window.innerWidth * 0.25;
       const rightQuarter = window.innerWidth * 0.75;
-      const quarterHeight = Math.floor(window.innerHeight * 0.25);
 
       // Determine horizontal position
       if (startPosition.x < 0) {
@@ -39,18 +31,18 @@ export default function Monkey() {
       } else {
         targetX = startPosition.x < window.innerWidth / 2 ? leftQuarter : rightQuarter;
       }
-
-      // Set vertical position to quarter height regardless of scroll position
-      targetY = window.scrollY + quarterHeight;
+    } else if (storedData.state === 'leaving') {
+      // If leaving, exit through nearest edge
+      targetX = startPosition.x < window.innerWidth / 2 ? -100 : window.innerWidth + 100;
     }
 
     return {
-      x: Math.floor(targetX),
-      y: Math.floor(targetY),
+      x: Math.floor(targetX!),
+      y: startPosition.y, // Keep same Y position
     };
   };
 
-  const targetPosition = useMemo(getTargetPosition, [storedData.state, startPosition]);
+  const targetPosition = useMemo(getTargetPosition, [storedData.state, storedData.position]);
 
   // Add timer for idle state
   useEffect(() => {
@@ -74,15 +66,11 @@ export default function Monkey() {
         lastTime = currentTime;
 
         const currentX = storedData.position.x;
-        const currentY = storedData.position.y;
-
-        // Calculate distances for both x and y
         const distanceX = targetPosition.x - currentX;
-        const distanceY = targetPosition.y - currentY;
         const directionX = distanceX > 0 ? 1 : -1;
         const moveAmount = speed * deltaTime;
 
-        if (Math.abs(distanceX) <= moveAmount && Math.abs(distanceY) <= moveAmount) {
+        if (Math.abs(distanceX) <= moveAmount) {
           monkeyStateStorage.setPosition(targetPosition);
           if (storedData.state === 'walking') {
             monkeyStateStorage.setState('talking');
@@ -91,10 +79,10 @@ export default function Monkey() {
             monkeyStateStorage.setState('hiding');
           }
         } else {
-          // Move both x and y towards target
+          // Move only horizontally
           monkeyStateStorage.setPosition({
-            x: currentX + (Math.abs(distanceX) <= moveAmount ? distanceX : moveAmount * directionX),
-            y: currentY + (distanceY * moveAmount) / Math.max(Math.abs(distanceX), 1), // proportional y movement
+            x: currentX + moveAmount * directionX,
+            y: storedData.position.y,
           });
           animationFrameId = requestAnimationFrame(animate);
         }
@@ -111,15 +99,33 @@ export default function Monkey() {
   }, [generateText, storedData.state, storedData.position, targetPosition]);
 
   useEffect(() => {
-    const messageListener = (message: { type: string }) => {
+    const messageListener = async (message: { type: string }) => {
       if (message.type === 'COME_HERE') {
+        const topQuarter = window.scrollY + window.innerHeight * 0.25;
+        const bottomQuarter = window.scrollY + window.innerHeight * 0.75;
+        const currentY = storedData.position.y;
+
+        let newY = currentY;
+        if (currentY < topQuarter) {
+          newY = topQuarter;
+        } else if (currentY > bottomQuarter) {
+          newY = bottomQuarter;
+        }
+
+        const newPosition = {
+          x: storedData.position.x,
+          y: newY,
+        };
+
+        await monkeyStateStorage.setPosition(newPosition);
+
         monkeyStateStorage.setState('walking');
       }
     };
 
     chrome.runtime.onMessage.addListener(messageListener);
     return () => chrome.runtime.onMessage.removeListener(messageListener);
-  }, []);
+  }, [storedData.position.x, storedData.position.y]);
 
   return (
     <div
@@ -158,13 +164,15 @@ export default function Monkey() {
           storedData.state !== 'hiding'
             ? e => {
                 if (e.key === 'Enter' || e.key === ' ') {
-                  handleMouseDown(e as unknown as React.MouseEvent);
+                  handleMouseDown(e as unknown as React.MouseEvent<HTMLDivElement>);
                 }
               }
             : undefined
         }
         onDragStart={e => e.preventDefault()}>
-        {speechText && <SpeechBubble text={speechText} />}
+        {(speechText || storedData.state === 'thinking') && (
+          <SpeechBubble text={speechText} isThinking={storedData.state === 'thinking'} />
+        )}
         <MonkeyVisual
           selectedHat={selectedHat}
           direction={
@@ -176,6 +184,7 @@ export default function Monkey() {
           }
           state={storedData.state}
         />
+        {/* <div className="pt-4">{storedData.state}</div> */}
       </div>
     </div>
   );
