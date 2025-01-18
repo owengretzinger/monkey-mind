@@ -15,15 +15,15 @@ export const SpeechBubble: React.FC<SpeechBubbleProps> = ({ text }) => {
       }}>
       <div
         style={{
-          minWidth: '20rem',
-          maxWidth: '20rem',
+          width: '20rem',
           height: 'auto',
           borderRadius: '0.5rem',
           backgroundColor: 'white',
-          padding: '0.75rem',
-          color: '#f59e0b',
+          padding: '0.5rem',
+          color: '#78350f',
           boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
           wordWrap: 'break-word',
+          border: '1px solid #78350f',
         }}>
         {text}
       </div>
