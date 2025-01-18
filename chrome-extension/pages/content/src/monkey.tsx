@@ -240,7 +240,11 @@ export default function Monkey() {
         }
         onDragStart={e => e.preventDefault()}>
         {(speechText || storedData.state === 'thinking') && (
-          <SpeechBubble text={speechText} isThinking={storedData.state === 'thinking'} />
+          <SpeechBubble 
+          text={speechText} 
+          isThinking={storedData.state === 'thinking'} 
+          isOnRightSide={storedData.position.x > window.innerWidth / 2}
+        />
         )}
         <MonkeyVisual
           selectedHat={selectedHat}
