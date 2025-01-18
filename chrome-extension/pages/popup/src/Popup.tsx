@@ -13,11 +13,18 @@ const Popup = () => {
     }
   };
 
+  const callMonkey = async () => {
+    const [tab] = await chrome.tabs.query({ currentWindow: true, active: true });
+    if (tab.id) {
+      chrome.tabs.sendMessage(tab.id, { type: 'COME_HERE' });
+    }
+  };
+
   return (
     <div className={`App bg-slate-50`}>
       <header className={`App-header text-amber-950`}>
         <div className="flex flex-col items-center justify-center space-y-2 p-4">
-          <MonkeyVisual selectedHat={selectedHat} />
+          <MonkeyVisual selectedHat={selectedHat} state="idle" />
 
           <div className="pb-1 text-center">
             <p className="text-sm font-medium text-amber-900">{currentHat.name}</p>
@@ -39,9 +46,12 @@ const Popup = () => {
             ))}
           </div>
 
-          <div className="pt-2">
+          <div className="flex w-full flex-col gap-2 pt-2">
             <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={generateMonkeyText}>
               Make Monkey Talk
+            </button>
+            <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={callMonkey}>
+              Come Here!
             </button>
           </div>
         </div>
