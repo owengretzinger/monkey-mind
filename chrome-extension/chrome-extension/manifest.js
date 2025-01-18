@@ -48,13 +48,13 @@ const manifest = withSidePanel({
   },
   action: {
     default_popup: 'popup/index.html',
-    default_icon: 'icon-34.png',
+    default_icon: 'monkey.png',
   },
   chrome_url_overrides: {
     newtab: 'new-tab/index.html',
   },
   icons: {
-    128: 'icon-128.png',
+    128: 'monkey.png',
   },
   content_scripts: [
     {
@@ -73,7 +73,7 @@ const manifest = withSidePanel({
   devtools_page: 'devtools/index.html',
   web_accessible_resources: [
     {
-      resources: ['*.js', '*.css', '*.svg', 'icon-128.png', 'icon-34.png'],
+      resources: ['*.js', '*.css', '*.svg', 'monkey.png', 'monkey.png'],
       matches: ['*://*/*'],
     },
   ],
