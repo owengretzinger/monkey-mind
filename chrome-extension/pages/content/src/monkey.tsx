@@ -8,7 +8,9 @@ export default function Monkey() {
   const [position, setPosition] = useState(storedPosition);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [speechText, setSpeechText] = useState<string>('Hello I am monkey');
+  const [speechText, setSpeechText] = useState<string>(
+    'Hello I am monkey and i am very pleased to meet you :) my name is monkey and what is yours ?',
+  );
   const selectedHat = useStorage(hatStorage);
 
   useEffect(() => {
@@ -109,17 +111,34 @@ export default function Monkey() {
           }
         }}>
         {speechText && <SpeechBubble text={speechText} />}
-        <img
-          src={chrome.runtime.getURL('monkey.png')}
-          alt="Monkey"
-          style={{
-            width: '64px',
-            height: '64px',
-            pointerEvents: 'none',
-            userSelect: 'none',
-          }}
-          draggable={false}
-        />
+        <div className="relative">
+          <img
+            src={chrome.runtime.getURL('monkey.png')}
+            alt="Monkey"
+            style={{
+              width: '64px',
+              height: '64px',
+              pointerEvents: 'none',
+              userSelect: 'none',
+            }}
+            draggable={false}
+          />
+          {selectedHat && (
+            <img
+              src={chrome.runtime.getURL(`hats/${selectedHat}.PNG`)}
+              alt="Hat"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '64px',
+                height: '64px',
+                pointerEvents: 'none',
+                userSelect: 'none',
+              }}
+              draggable={false}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
