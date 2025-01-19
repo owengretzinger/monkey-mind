@@ -1,47 +1,33 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-
-export enum HatType {
-  None = 'none',
-  Banana = 'banana',
-  Girlfriend = 'girlfriend',
-  Grad = 'grad',
-  Wizard = 'wizard',
-  Tinfoil = 'tinfoil',
-  Military = 'military'
-}
-// Interface for the document
 export interface INote extends Document {
-  color: number;
-  tilt: number
-  author: mongoose.Types.ObjectId;
-  date: Date;
-  title: string;
-  content: string;
-  positionX: number;
-  positionY: number;
-  hat: HatType;
-  profilePic: string;
+    _id: String,  // or whatever type your id is
+    color: number;
+    author: string;
+    date: Date;
+    tilt: number;
+    title: string;
+    content: string;
+    positionX: number;
+    positionY: number;
+    hat: string;
+    profilePic: string;
+    link: string;
 }
 
-// Schema definition
 const NoteSchema = new Schema({
-  color: { type: Number, required: true },
-  tilt: { type: Number, required: true},
-  author: { type: String, required: true },
-  authorID: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  date: { type: Date, default: Date.now },
-  title: { type: String, required: true },
-  content: { type: String, default: '' },
-  positionX: { type: Number, required: true },
-  positionY: { type: Number, required: true },
-  hat: { 
-    type: String, 
-    enum: Object.values(HatType),
-    default: HatType.None 
-  },
-  profilePic: { type: String, required: true }
-});
+    _id: { type: String, required: true },
+    color: { type: Number, required: true },
+    author: { type: String, required: true },
+    date: { type: Date, default: Date.now },
+    tilt: { type: Number, required: true },
+    title: { type: String, required: true },
+    content: { type: String, required: true },
+    positionX: { type: Number, required: true },
+    positionY: { type: Number, required: true },
+    hat: { type: String, required: true },
+    profilePic: { type: String, required: true },
+    link: { type: String, required: true }
+}, { _id: false });
 
-// Export the model
 export default mongoose.model<INote>('Note', NoteSchema);

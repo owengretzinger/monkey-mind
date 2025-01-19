@@ -98,7 +98,7 @@ const Popup = () => {
   const leaveNote = async () => {
     const [tab] = await chrome.tabs.query({ currentWindow: true, active: true });
     if (tab.id) {
-      chrome.tabs.sendMessage(tab.id, { type: 'ADD_NOTE' });
+      chrome.tabs.sendMessage(tab.id, { type: 'ADD_NOTE', username: user?.name, profilePic: user?.picture });
     }
   };
 

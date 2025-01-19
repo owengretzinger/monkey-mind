@@ -5,22 +5,23 @@ import { useAuth0 } from '@src/auth/Auth0Provider';
 const tiltAngles = [-2, -1, 0, 1, 2]
 
 const formatDate = () => {
-    const now = new Date();
-    return now.toLocaleString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
-  };
-  
+  const now = new Date();
+  return now.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
 
 interface NoteProps extends NoteType {
-    onDelete: () => void;
+  onDelete: () => void;
 }
 
 const Note = (props: NoteProps) => {
-  const { user } = useAuth0();
+  const apiURL = "http://localhost:3000/api/notes"
+
   const [position, setPosition] = useState({ x: props.positionX, y: props.positionY });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -29,15 +30,15 @@ const Note = (props: NoteProps) => {
   const noteRef = useRef<HTMLDivElement>(null);
 
   const color = props.color;
-  const author = user?.email || "ll";
+  const author = props.author;
   const date = props.date;
-  const profilePic = user?.picture || props.profilePic;
+  const profilePic = props.profilePic;
   const hat = props.hat;
 
   const colorIndex = color % pastelColors.length;
   const bgColor = pastelColors[colorIndex];
   const tiltAngle = tiltAngles[color % tiltAngles.length];
-
+  const [firstTime, setFirstTime] = useState(true);
   const handleMouseDown = (e: React.MouseEvent) => {
     if (noteRef.current) {
       setIsDragging(true);
@@ -70,20 +71,86 @@ const Note = (props: NoteProps) => {
     setNoteContent(e.target.value);
   };
 
-  const handleDeletion = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent dragging when clicking delete
-    props.onDelete(); // Call the onDelete function passed from parent
-  }
 
 
-  const handleBlur = () => {
-    console.log('Note content saved:', noteContent);
-    // Here you would typically save the note content to your backend/storage
-    // For example:
-    // saveNote({ ...props, content: noteContent });
+
+  // DATA FLOW
+  const handleDeletion = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const res = await fetch(`${apiURL}/${props.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    props.onDelete();
+
   };
 
 
+  const handleBlur = async () => {
+    console.log('Note content saved:', noteContent);
+    if (noteTitle.trim() !== '') {
+      const res = await fetch(`${apiURL}/${props.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: props.id,
+          title: noteTitle,
+          content: noteContent,
+          positionX: position.x,
+          positionY: position.y,
+          color: color,
+          author: author,
+          date: formatDate(),
+          tilt: tiltAngle,
+          profilePic: profilePic,
+          hat: hat,
+          link: window.location.href
+        }),
+      });
+    }
+  };
+
+  useEffect(() => {
+    const createNote = async () => {
+      if (noteTitle.trim() !== '' && noteTitle.trim().length === 1 && firstTime) {
+        setFirstTime(false);
+        try {
+          const response = await fetch(`${apiURL}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              idSpecial: props.id,
+              title: noteTitle,
+              content: noteContent,
+              positionX: position.x,
+              positionY: position.y,
+              color: color,
+              author: author,
+              date: formatDate(),
+              tilt: tiltAngle,
+              profilePic: profilePic,
+              hat: hat,
+              link: window.location.href
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to create note');
+          }
+        } catch (error) {
+          console.error('Error creating note:', error);
+        }
+      }
+    };
+
+    createNote();
+  }, [noteTitle]); // Only trigger when noteTitle changes
 
 
 
@@ -98,8 +165,6 @@ const Note = (props: NoteProps) => {
     };
   }, [isDragging, dragOffset]);
 
-  useEffect(() => {  console.log(user)
-  }, [])
 
 
 
@@ -126,10 +191,10 @@ const Note = (props: NoteProps) => {
         boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
         position: 'relative',
         backgroundColor: bgColor === 'bg-yellow-100' ? '#fef9c3' :
-                       bgColor === 'bg-pink-100' ? '#fce7f3' :
-                       bgColor === 'bg-blue-100' ? '#dbeafe' :
-                       bgColor === 'bg-green-100' ? '#dcfce7' :
-                       '#f8fafc'
+          bgColor === 'bg-pink-100' ? '#fce7f3' :
+            bgColor === 'bg-blue-100' ? '#dbeafe' :
+              bgColor === 'bg-green-100' ? '#dcfce7' :
+                '#f8fafc'
       }}>
         <button
           style={{
@@ -151,7 +216,7 @@ const Note = (props: NoteProps) => {
           }}
           onClick={handleDeletion}
         />
-          
+
         <div style={{
           display: 'flex',
           alignItems: 'flex-start',
@@ -167,18 +232,17 @@ const Note = (props: NoteProps) => {
             flexShrink: 0,
             backgroundColor: '#e5e7eb'
           }}>
-            <img 
-              src={profilePic} 
-              alt="Profile" 
+            <img
+              src={profilePic}
+              alt="Profile"
               style={{
                 width: '100%',
                 height: '100%',
-                paddingTop: '2.5rem',
                 objectFit: 'cover'
               }}
             />
           </div>
-          
+
           <div style={{
             flex: '1',
             minWidth: '0'
@@ -192,16 +256,18 @@ const Note = (props: NoteProps) => {
                 width: '100%',
                 backgroundColor: 'transparent',
                 fontWeight: '500',
+                paddingLeft: '-0.5rem',
                 fontSize: '0.875rem',
                 lineHeight: '1rem',
                 outline: 'none',
                 border: 'none',
+                color: '#374151', // Adding dark gray color for text
               }}
             />
             <div style={{
               display: 'flex',
               flexDirection: 'column',
-              fontSize: '0.75rem',
+              fontSize: '0.65rem',
               color: '#6b7280'
             }}>
               <div style={{
@@ -211,14 +277,16 @@ const Note = (props: NoteProps) => {
                 whiteSpace: 'nowrap'
               }}>
                 <div style={{
-                  fontSize: '0.625rem',
+                  fontSize: '0.7rem',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap'
                 }}>
-                  {formatDate()}
+                                  {author}
+
                 </div>
-                {author}
+                {formatDate()}
+
               </div>
             </div>
           </div>
@@ -261,14 +329,14 @@ const Note = (props: NoteProps) => {
                 paddingRight: '0.25rem',
                 WebkitMask: 'linear-gradient(transparent, black 10px)',
                 overflowY: 'auto',
-                border:'none'
+                border: 'none'
               }}
             />
           </div>
         </div>
-     
-     
-     
+
+
+
       </div>
     </div>
   );

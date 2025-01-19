@@ -49,7 +49,7 @@ const monkeysByUrl = new Map<string, Map<string, MonkeyPosition>>();
 const activeConnections = new Map<string, ExtendedWebSocket>();
 
 // Update WebSocket connection handler
-wss.on('connection', (ws: ExtendedWebSocket) => {
+wss.on('caonnection', (ws: ExtendedWebSocket) => {
     console.log('New client connected');
     let currentUrl: string | null = null;
     let userId: string | null = null;

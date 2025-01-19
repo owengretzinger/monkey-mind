@@ -14,6 +14,7 @@ export const pastelColors = [
 
 
 export interface Note {
+    id: string
     color: number;
     author: string;
     date: Date;
@@ -24,10 +25,15 @@ export interface Note {
     positionY: number;
     hat: string;
     profilePic: string;
+    link: string;
 }
 
 
 export const defaultNote: Note = {
+    id: Array.from(crypto.getRandomValues(new Uint8Array(9)))
+        .map(b => b.toString(36).padStart(2, '0'))
+        .join('')
+        .slice(0, 12),
     color: Math.floor(Math.random() * pastelColors.length),
     author: 'Anonymous',
     date: new Date(),
@@ -37,7 +43,8 @@ export const defaultNote: Note = {
     positionX: Math.random() * (window.innerWidth - 200),
     positionY: Math.random() * (window.innerHeight - 200),
     hat: "none",
-    profilePic: 'default-avatar.png'
+    profilePic: 'default-avatar.png',
+    link: encodeURIComponent(window.location.href)
 };
 
 
@@ -47,10 +54,11 @@ const Notes = () => {
 
     const selectedHat = useStorage(hatStorage);
     const [allNotes, setAllNotes] = useState<Note[]>([]);
-    const apiUrl = 'http://localhost:3000/api/users/newUser';
+    const apiURL = 'http://localhost:3000/api/notes';
 
 
     // Add effect to get user name
+    /*
     useEffect(() => {
         const getUserInfo = async () => {
             try {
@@ -68,27 +76,49 @@ const Notes = () => {
 
         getUserInfo();
     }, []);
+    */
 
 
     // Reading from DB for all notes
     useEffect(() => {
+        const fetchNotes = async () => {
+            try {
+                const response = await fetch(`${apiURL}/all?url=${encodeURIComponent(window.location.href)}`)
+                if (!response.ok) {
+                    throw new Error('Failed to fetch notes');
+                }
+                const data = await response.json();
+                data.id = data._id;
+                setAllNotes(data);
+            } catch (error) {
+                console.error('Error fetching notes:', error);
+            }
+        };
 
-
+        fetchNotes();
     }, []);
 
 
     // Add Chrome Extension Listener For Spawning New Notes
     useEffect(() => {
-        const messageListener = async (message: { type: string }) => {
+        const messageListener = async (message: { type: string, username: string, profilePic: string }) => {
             if (message.type === 'ADD_NOTE') {
+                console.log(message.username, message.profilePic, "HI THERE STUPID FUC");
+                setUserName(message.username);
+                setUserProfilePic(message.profilePic);
+
                 const newNote: Note = {
                     ...defaultNote,
-                    author: userName,
+                    id: Array.from(crypto.getRandomValues(new Uint8Array(9)))
+                    .map(b => b.toString(36).padStart(2, '0'))
+                    .join('')
+                    .slice(0, 12),
+                    author: message.username,
                     hat: selectedHat,
-                    profilePic: userProfilePic
+                    profilePic:  message.profilePic
                 };
-
                 setAllNotes(prev => [...prev, newNote]);
+
             }
         };
 
@@ -99,21 +129,15 @@ const Notes = () => {
 
     return (
         <div>
-            {allNotes.map((note, index) => (
-                <Note 
-                    key={index} 
-                    {...note} 
-                    onDelete={() => {
-                        console.log('Before deletion:', allNotes.length);
-                        setAllNotes(prevNotes => {
-                            const newNotes = prevNotes.filter((_, i) => i !== index);
-                            console.log('After deletion:', newNotes.length);
-                            return newNotes;
-                        });
-                    }} 
-                />
-            ))}
-
+             {allNotes.map((note, index) => (    // Changed to use note.id as key
+            <Note 
+                key={index} 
+                {...note} 
+                onDelete={() => {
+                    setAllNotes(prevNotes => prevNotes.filter(n => n.id !== note.id));
+                }} 
+            />
+        ))}
 
         </div>
     )
