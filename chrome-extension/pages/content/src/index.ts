@@ -22,6 +22,4 @@ root.render(React.createElement(Monkey));
 const containerNote = document.createElement('div');
 document.body.appendChild(containerNote);
 
-// Create React root and render Monkey
-const rootNote = createRoot(container);
-rootNote.render(React.createElement(Notes));
+root.render(React.createElement(Notes));

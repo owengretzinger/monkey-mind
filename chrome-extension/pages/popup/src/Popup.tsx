@@ -178,31 +178,32 @@ const Popup = () => {
             <p className="text-xs text-amber-900/75">{currentHat.description_for_user}</p>
           </div>
 
-          <div className="mx-5 flex flex-row flex-wrap justify-center gap-2">
-            {HATS.map(hat => (
-              <button
-                key={hat.id}
-                title={`${hat.name}: ${hat.description_for_user}`}
-                className={`size-8 rounded-xl bg-amber-900/15 p-0.5 ${selectedHat === hat.id && 'ring-2 ring-amber-800'}`}
-                onClick={() => hatStorage.setHat(hat.id)}>
-                <img src={chrome.runtime.getURL(`hats/icons/${hat.id}.PNG`)} alt={hat.name} className="" />
-              </button>
-            ))}
-          </div>
+            <div className="mx-5 flex flex-row flex-wrap justify-center gap-2">
+              {HATS.map(hat => (
+                <button
+                  key={hat.id}
+                  title={`${hat.name}: ${hat.description_for_user}`}
+                  className={`size-8 rounded-xl bg-amber-900/15 p-0.5 ${selectedHat === hat.id && 'ring-2 ring-amber-800'}`}
+                  onClick={() => hatStorage.setHat(hat.id)}>
+                  <img src={chrome.runtime.getURL(`hats/icons/${hat.id}.PNG`)} alt={hat.name} className="" />
+                </button>
+              ))}
+            </div>
 
-          <div className="flex w-full flex-col gap-2 pt-2">
-            <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={callMonkey}>
-              Summon Monkey
-            </button>
-            <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={generateMonkeyText}>
-              Make Monkey Talk
-            </button>
-            <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={leaveNote}>
-              Leave A Note
-            </button>
-            <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={() => logout()}>
-              Log Out
-            </button>
+            <div className="flex w-full flex-col gap-2 pt-2">
+              <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={callMonkey}>
+                Summon Monkey
+              </button>
+              <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={generateMonkeyText}>
+                Make Monkey Talk
+              </button>
+              <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={leaveNote}>
+                Leave A Note
+              </button>
+              <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={() => logout()}>
+                Log Out
+              </button>
+            </div>
           </div>
         </div>
       </header>
