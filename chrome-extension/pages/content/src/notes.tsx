@@ -1,7 +1,7 @@
 import React, {useState, useEffect } from 'react'
 import { useStorage } from '@extension/shared';
-import { hatStorage } from '@extension/storage';
 import Note from "./components/Note";
+import { monkeyStateStorage } from '@extension/storage';
 
 export const pastelColors = [
     'bg-yellow-100',  // Pastel Yellow
@@ -45,7 +45,7 @@ const Notes = () => {
     const [userName, setUserName] = useState<string>('Anonymous');
     const [userProfilePic, setUserProfilePic] = useState<string>('default.png');
 
-    const selectedHat = useStorage(hatStorage);
+    const {hatId} = useStorage(monkeyStateStorage);
     const [allNotes, setAllNotes] = useState<Note[]>([]);
     const apiUrl = 'http://localhost:3000/api/users/newUser';
     
@@ -67,7 +67,7 @@ const Notes = () => {
               date: new Date(),
               title: 'Untitled Note',
               content: '',
-              hat: selectedHat,
+              hat: hatId,
               positionX: Math.random() * (window.innerWidth - 200),
               positionY: Math.random() * (window.innerHeight - 200),
               profilePic: userProfilePic || 'default.png'

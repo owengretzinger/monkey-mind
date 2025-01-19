@@ -1,29 +1,15 @@
 import '@src/Popup.css';
 import { useStorage, withErrorBoundary, withSuspense, MonkeyVisual } from '@extension/shared';
-import { HATS, hatStorage, monkeyStateStorage } from '@extension/storage';
+import { HATS, MONKEY_COLORS, monkeyStateStorage } from '@extension/storage';
 import { useAuth0 } from './auth/Auth0Provider';
 import { Login } from './components/Login';
 import { useState, useEffect, useCallback } from 'react';
 
-const MONKEY_COLORS = [
-  { hexCode: '#795e5c', hue: 0, isDark: true },
-  { hexCode: '#5b6750', hue: 90, isDark: true },
-  { hexCode: '#4c696b', hue: 180, isDark: true },
-  { hexCode: '#6c6077', hue: 270, isDark: true },
-  { hexCode: '#4d8a2d', hue: 30, isDark: false },
-  { hexCode: '#008c9c', hue: 120, isDark: false },
-  { hexCode: '#4481b9', hue: 150, isDark: false },
-  { hexCode: '#a069be', hue: 210, isDark: false },
-  { hexCode: '#cc5e8d', hue: 260, isDark: false },
-  { hexCode: '#c66558', hue: 300, isDark: false },
-];
-
 const Popup = () => {
   const { isAuthenticated, isLoading, logout, user } = useAuth0();
   const [, setAuthenticated] = useState(isAuthenticated);
-  const selectedHat = useStorage(hatStorage);
-  const monkeyData = useStorage(monkeyStateStorage);
-  const currentHat = HATS.find(hat => hat.id === selectedHat) || HATS[0];
+  const monkey = useStorage(monkeyStateStorage);
+  const hat = HATS.find(h => h.id === monkey.hatId)!;
 
   useEffect(() => {
     setAuthenticated(isAuthenticated);
@@ -131,23 +117,14 @@ const Popup = () => {
             </div>
           )}
           <div className="flex flex-col items-center justify-center space-y-2 p-4">
-            {/* {user && (
-            <div className="w-full">
-              <div className="mb-2 flex items-center space-x-2">
-                {user.picture && <img src={user.picture} alt="Profile" className="size-8 rounded-full" />}
-                <div className="text-left">
-                  <p className="text-sm font-medium text-amber-900">{user.name}</p>
-                  <p className="text-xs text-amber-900/75">{user.email}</p>
-                </div>
-              </div>
-              <button className="w-full rounded-xl bg-red-600/15 border border-red-600 text-red-600 px-2 py-1" onClick={() => logout()}>
-                Log Out
-              </button>
-            </div>
-          )} */}
-
             <div className="relative size-16">
-              <MonkeyVisual selectedHat={selectedHat} state="idle" color={monkeyData.color} />
+              <MonkeyVisual
+                state={{
+                  ...monkey,
+                  currentAction: 'idle',
+                  position: { x: 0, y: 0 },
+                }}
+              />
             </div>
 
             {/* choose color */}
@@ -155,7 +132,7 @@ const Popup = () => {
               {MONKEY_COLORS.map(({ hue, hexCode, isDark }) => (
                 <div key={hexCode} className="flex flex-col items-center">
                   <button
-                    className={`size-5 rounded-full ${monkeyData.color.hue === hue && monkeyData.color.isDark === isDark ? 'ring-2 ring-amber-800' : ''}`}
+                    className={`size-5 rounded-full ${monkey.color.hue === hue && monkey.color.isDark === isDark ? 'ring-2 ring-amber-800' : ''}`}
                     style={{
                       backgroundColor: hexCode,
                     }}
@@ -171,18 +148,18 @@ const Popup = () => {
             </div>
 
             <div className="pb-1 text-center">
-              <p className="text-sm font-medium text-amber-900">{currentHat.name}</p>
-              <p className="text-xs text-amber-900/75">{currentHat.description_for_user}</p>
+              <p className="text-sm font-medium text-amber-900">{hat.name}</p>
+              <p className="text-xs text-amber-900/75">{hat.description_for_user}</p>
             </div>
 
             <div className="mx-5 flex flex-row flex-wrap justify-center gap-2">
-              {HATS.map(hat => (
+              {HATS.map(h => (
                 <button
-                  key={hat.id}
-                  title={`${hat.name}: ${hat.description_for_user}`}
-                  className={`size-8 rounded-xl bg-amber-900/15 p-0.5 ${selectedHat === hat.id && 'ring-2 ring-amber-800'}`}
-                  onClick={() => hatStorage.setHat(hat.id)}>
-                  <img src={chrome.runtime.getURL(`hats/icons/${hat.id}.PNG`)} alt={hat.name} className="" />
+                  key={h.id}
+                  title={`${h.name}: ${h.description_for_user}`}
+                  className={`size-8 rounded-xl bg-amber-900/15 p-0.5 ${monkey.hatId === h.id && 'ring-2 ring-amber-800'}`}
+                  onClick={() => monkeyStateStorage.setHat(h.id)}>
+                  <img src={chrome.runtime.getURL(`hats/icons/${h.id}.PNG`)} alt={h.name} className="" />
                 </button>
               ))}
             </div>

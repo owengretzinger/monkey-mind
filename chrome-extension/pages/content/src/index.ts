@@ -1,7 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import Monkey from './monkey';
-import Notes from './notes';
+import Monkey from './AllMonkeys';
+// import Notes from './notes';
 
 console.log('content script loaded');
 
@@ -17,6 +17,3 @@ rootMonkey.render(React.createElement(Monkey));
 const containerNotes = document.createElement('div');
 document.body.appendChild(containerNotes);
 
-// Create React root and render Notes
-const rootNotes = createRoot(containerNotes);
-rootNotes.render(React.createElement(Notes));

@@ -1,1 +1,1 @@
-export * from './MonkeyVisual';
+export * from './MonkeyComponent';

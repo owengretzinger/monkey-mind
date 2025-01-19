@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { useStorage, MonkeyVisual } from '@extension/shared';
-import { monkeyStateStorage, hatStorage } from '@extension/storage';
+import { monkeyStateStorage } from '@extension/storage';
 import { SpeechBubble } from './SpeechBubble';
 import { useDraggable } from '../hooks/useDraggable';
 import { useMonkeyText } from '../hooks/useMonkeyText';
@@ -9,16 +9,15 @@ const SPEED = 150; // pixels per second
 const WALKING_TIME = 5000; // milliseconds
 
 export const LocalMonkey: React.FC = () => {
-  const storedData = useStorage(monkeyStateStorage);
-  const { handleMouseDown } = useDraggable(storedData.position, monkeyStateStorage);
-  const selectedHat = useStorage(hatStorage);
-  const { speechText, generateText } = useMonkeyText(selectedHat);
+  const monkey = useStorage(monkeyStateStorage);
+  const { handleMouseDown } = useDraggable(monkey.position, monkeyStateStorage);
+  const { speechText, generateText } = useMonkeyText(monkey.hatId);
 
   const getTargetPosition = () => {
-    const startPosition = storedData.position;
+    const startPosition = monkey.position;
     let targetX;
 
-    if (storedData.state === 'walking') {
+    if (monkey.currentAction === 'walking') {
       // If walking in, go to nearest quarter horizontally
       const leftQuarter = window.innerWidth * 0.25;
       const rightQuarter = window.innerWidth * 0.75;
@@ -31,7 +30,7 @@ export const LocalMonkey: React.FC = () => {
       } else {
         targetX = startPosition.x < window.innerWidth / 2 ? leftQuarter : rightQuarter;
       }
-    } else if (storedData.state === 'leaving') {
+    } else if (monkey.currentAction === 'leaving') {
       // If leaving, exit through nearest edge
       targetX = startPosition.x < window.innerWidth / 2 ? -100 : window.innerWidth + 100;
     }
@@ -42,22 +41,22 @@ export const LocalMonkey: React.FC = () => {
     };
   };
 
-  const targetPosition = useMemo(getTargetPosition, [storedData.state, storedData.position]);
+  const targetPosition = useMemo(getTargetPosition, [monkey.currentAction, monkey.position]);
 
   // Add timer for idle state
   useEffect(() => {
-    if (storedData.state === 'idle') {
+    if (monkey.currentAction === 'idle') {
       const timer = setTimeout(() => {
-        monkeyStateStorage.setState('leaving');
+        monkeyStateStorage.setAction('leaving');
       }, WALKING_TIME);
       return () => clearTimeout(timer);
     }
     return undefined;
-  }, [storedData.state]);
+  }, [monkey.currentAction]);
 
   // Handle walking animation
   useEffect(() => {
-    if (storedData.state === 'walking' || storedData.state === 'leaving') {
+    if (monkey.currentAction === 'walking' || monkey.currentAction === 'leaving') {
       let animationFrameId: number;
       const speed = SPEED;
       let lastTime = performance.now();
@@ -66,23 +65,24 @@ export const LocalMonkey: React.FC = () => {
         const deltaTime = (currentTime - lastTime) / 1000;
         lastTime = currentTime;
 
-        const currentX = storedData.position.x;
+        const currentX = monkey.position.x;
         const distanceX = targetPosition.x - currentX;
         const directionX = distanceX > 0 ? 1 : -1;
+
         const moveAmount = speed * deltaTime;
 
         if (Math.abs(distanceX) <= moveAmount) {
           monkeyStateStorage.setPosition(targetPosition);
-          if (storedData.state === 'walking') {
-            monkeyStateStorage.setState('talking');
+          if (monkey.currentAction === 'walking') {
+            monkeyStateStorage.setAction('talking');
             generateText(true);
           } else {
-            monkeyStateStorage.setState('hiding');
+            monkeyStateStorage.setAction('hiding');
           }
         } else {
           monkeyStateStorage.setPosition({
             x: currentX + moveAmount * directionX,
-            y: storedData.position.y,
+            y: monkey.position.y,
           });
           animationFrameId = requestAnimationFrame(animate);
         }
@@ -96,7 +96,7 @@ export const LocalMonkey: React.FC = () => {
       };
     }
     return undefined;
-  }, [generateText, storedData.state, storedData.position, targetPosition]);
+  }, [generateText, monkey.currentAction, monkey.position, targetPosition]);
 
   // Handle "come here" message
   useEffect(() => {
@@ -104,7 +104,7 @@ export const LocalMonkey: React.FC = () => {
       if (message.type === 'COME_HERE') {
         const topQuarter = window.scrollY + window.innerHeight * 0.25;
         const bottomQuarter = window.scrollY + window.innerHeight * 0.75;
-        const currentY = storedData.position.y;
+        const currentY = monkey.position.y;
 
         let newY = currentY;
         if (currentY < topQuarter) {
@@ -114,21 +114,21 @@ export const LocalMonkey: React.FC = () => {
         }
 
         const newPosition = {
-          x: storedData.position.x,
+          x: monkey.position.x,
           y: newY,
         };
 
         await monkeyStateStorage.setPosition(newPosition);
-        monkeyStateStorage.setState('walking');
+        monkeyStateStorage.setAction('walking');
       }
     };
 
     chrome.runtime.onMessage.addListener(messageListener);
     return () => chrome.runtime.onMessage.removeListener(messageListener);
-  }, [storedData.position.x, storedData.position.y]);
+  }, [monkey.position.x, monkey.position.y]);
 
   // Don't render if hiding
-  if (storedData.state === 'hiding') {
+  if (monkey.currentAction === 'hiding') {
     return null;
   }
 
@@ -139,8 +139,8 @@ export const LocalMonkey: React.FC = () => {
       aria-label="Draggable monkey"
       style={{
         position: 'absolute',
-        left: storedData.position.x,
-        top: storedData.position.y,
+        left: monkey.position.x,
+        top: monkey.position.y,
         cursor: 'move',
         userSelect: 'none',
         pointerEvents: 'auto',
@@ -151,36 +151,21 @@ export const LocalMonkey: React.FC = () => {
       }}
       draggable={false}
       className="relative"
-      onMouseDown={storedData.state !== 'hiding' ? handleMouseDown : undefined}
-      onKeyDown={
-        storedData.state !== 'hiding'
-          ? e => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                handleMouseDown(e as unknown as React.MouseEvent<HTMLDivElement>);
-              }
-            }
-          : undefined
-      }
+      onMouseDown={handleMouseDown}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleMouseDown(e as unknown as React.MouseEvent<HTMLDivElement>);
+        }
+      }}
       onDragStart={e => e.preventDefault()}>
-      {(speechText || storedData.state === 'thinking') && (
+      {(speechText || monkey.currentAction === 'thinking') && (
         <SpeechBubble
           text={speechText}
-          isThinking={storedData.state === 'thinking'}
-          isOnRightSide={storedData.position.x > window.innerWidth / 2}
+          isThinking={monkey.currentAction === 'thinking'}
+          isOnRightSide={monkey.position.x > window.innerWidth / 2}
         />
       )}
-      <MonkeyVisual
-        selectedHat={selectedHat}
-        direction={
-          storedData.state === 'walking' || storedData.state === 'leaving'
-            ? storedData.position.x < targetPosition.x
-              ? 'right'
-              : 'left'
-            : 'left'
-        }
-        state={storedData.state}
-        color={storedData.color}
-      />
+      <MonkeyVisual state={monkey} />
     </div>
   );
 };
