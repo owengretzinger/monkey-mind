@@ -5,7 +5,11 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import { WebSocket, WebSocketServer } from "ws";
-import type { WebSocketMessage, ConnectedClient, MonkeyData } from "./types/messages";
+import type {
+  WebSocketMessage,
+  ConnectedClient,
+  MonkeyData,
+} from "./types/messages";
 import { connectDB } from "./config/database";
 import noteRoutes from "./routes/notes";
 import newUser from "./routes/newUser";
@@ -30,6 +34,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/notes", noteRoutes);
 app.use("/api/mascot", mascotRoutes);
 app.use("/api/users", newUser);
+app.get("/api/health", (req: Request, res: Response) => {
+  res.status(200).json({ status: "ok" });
+});
 
 // Create HTTP server
 const server = http.createServer(app);
