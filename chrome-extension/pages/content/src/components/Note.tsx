@@ -284,7 +284,7 @@ const Note = (props: NoteProps) => {
               style={{
                 width: '3rem',
                 height: '3rem',
-
+                borderRadius: '9999px',
                 flexShrink: 0,
                 backgroundColor: '#e5e7eb',
                 position: 'relative',
