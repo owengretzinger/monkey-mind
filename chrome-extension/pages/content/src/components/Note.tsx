@@ -284,19 +284,34 @@ const Note = (props: NoteProps) => {
               style={{
                 width: '3rem',
                 height: '3rem',
-                borderRadius: '9999px',
-                overflow: 'hidden',
+
                 flexShrink: 0,
                 backgroundColor: '#e5e7eb',
+                position: 'relative',
               }}>
               <img
                 src={profilePic}
                 alt="Profile"
                 style={{
                   width: '100%',
+                  borderRadius: '9999px',
                   height: '100%',
                   objectFit: 'cover',
                 }}
+              />
+              <img
+                src={chrome.runtime.getURL(`hats/icons/${hat}.PNG`)}
+                alt="Hat"
+                style={{
+                  pointerEvents: 'none',
+                  position: 'absolute',
+                  top: -20,
+                  right: 4,
+                  width: 40,
+                  height: 40,
+                  userSelect: 'none',
+                }}
+                draggable={false}
               />
             </div>
 
