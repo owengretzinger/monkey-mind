@@ -1,31 +1,34 @@
-import { WebSocket } from 'ws';
+import WebSocket from "ws";
 
-export interface UserPresence {
-    userId: string;
-    url: string;
+export interface Position {
+  x: number;
+  y: number;
 }
 
-export interface MonkeyPosition {
-    id: string;
-    position: {
-        x: number;
-        y: number;
-    };
-    state: string;
-    direction?: 'left' | 'right';
-    url: string;
-    ownerName: string;
-    selectedHat?: string;
-    isHiding?: boolean;
-    speechText?: string;
-    isThinking?: boolean;
+export interface User {
+  id: string;
+  displayName: string;
 }
 
-export interface WebSocketMessage {
-    type: 'presence' | 'chat' | 'monkey_position' | 'monkey_left';
-    data: UserPresence | MonkeyPosition | any;
+export interface MonkeyData {
+  position: Position;
+  currentAction: string;
+  color: {
+    hue: number;
+    isDark: boolean;
+  };
+  hatId: string;
+  user: User | null;
 }
 
-export interface ExtendedWebSocket extends WebSocket {
-    isAlive?: boolean;
+export type WebSocketMessage = {
+  type: "update" | "disconnect";
+  data: MonkeyData | { userId: string };
+};
+
+// For type safety in the server
+export interface ConnectedClient {
+  ws: WebSocket;
+  monkeyData: MonkeyData;
+  lastSeen: number;
 }

@@ -1,11 +1,9 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { Auth0Provider } from './auth/Auth0Provider';
-import Monkey from './monkey';
-import Notes from './notes';
+// import Notes from './notes';
+import AllMonkeys from './AllMonkeys';
 
 console.log('content script loaded');
-
 
 // Create container for Monkey
 const containerMonkey = document.createElement('div');
@@ -17,15 +15,7 @@ document.body.appendChild(containerNotes);
 
 // Create React roots and render components
 const rootMonkey = createRoot(containerMonkey);
-rootMonkey.render(
-  React.createElement(Auth0Provider, null, 
-    React.createElement(Monkey)
-  )
-);
+rootMonkey.render(React.createElement(AllMonkeys));
 
-const rootNotes = createRoot(containerNotes);
-rootNotes.render(
-  React.createElement(Auth0Provider, null,
-    React.createElement(Notes)
-  )
-);
+// const rootNotes = createRoot(containerNotes);
+// rootNotes.render(React.createElement(Notes));

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useStorage } from '@extension/shared';
-import { hatStorage } from '@extension/storage';
 import Note from "./components/Note";
+import { monkeyStateStorage } from '@extension/storage';
 
 export const pastelColors = [
     'bg-yellow-100',  // Pastel Yellow
@@ -52,7 +52,7 @@ const Notes = () => {
     const [userName, setUserName] = useState<string>('Anonymous');
     const [userProfilePic, setUserProfilePic] = useState<string>('default.png');
 
-    const selectedHat = useStorage(hatStorage);
+    const {hatId} = useStorage(monkeyStateStorage);
     const [allNotes, setAllNotes] = useState<Note[]>([]);
     const apiURL = 'http://localhost:3000/api/notes';
 
@@ -114,8 +114,8 @@ const Notes = () => {
                     .join('')
                     .slice(0, 12),
                     author: message.username,
-                    hat: selectedHat,
-                    profilePic:  message.profilePic
+                    hat: hatId,
+                    profilePic:  message.profilePic,
                 };
                 setAllNotes(prev => [...prev, newNote]);
 
@@ -124,7 +124,7 @@ const Notes = () => {
 
         chrome.runtime.onMessage.addListener(messageListener);
         return () => chrome.runtime.onMessage.removeListener(messageListener);
-    }, [userName, userProfilePic, selectedHat]); // Add all dependencies
+    }, [userName, userProfilePic, hatId]); // Add all dependencies
 
 
     return (

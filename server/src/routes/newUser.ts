@@ -1,39 +1,44 @@
-import { Router, Request, Response } from 'express';
-import User from '../models/User';
-
+import { Router, Request, Response } from "express";
+import User from "../models/User";
 
 const router = Router();
 
-router.post('/newUser', async (req, res) => {
+router.post("/newUser", async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { id, displayName } = req.body;
 
-    // Find user by email and update if exists, or create if doesn't exist
+    // Find user by id and update if exists, or create if doesn't exist
     const user = await User.findOneAndUpdate(
-      { email }, // search criteria
-      { name, email }, // update/insert data
-      { 
+      { id }, // search criteria
+      { id, displayName }, // update/insert data
+      {
         new: true, // return the updated/inserted document
-        upsert: false // don't create if doesn't exist
+        upsert: false, // don't create if doesn't exist
       }
     );
 
     if (user) {
-      res.status(200).json({ message: 'User already exists', user });
+      res.status(200).json({ message: "User already exists", user });
     } else {
       // Create new user if doesn't exist
-      const newUser = new User({ name, email });
+      const newUser = new User({ id, displayName });
       await newUser.save();
-      res.status(201).json({ message: 'User created successfully', user: newUser });
+      res
+        .status(201)
+        .json({ message: "User created successfully", user: newUser });
     }
-
   } catch (error) {
-    console.error('Detailed error:', {
+    console.error("Detailed error:", {
       message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : 'No stack trace',
-      name: error instanceof Error ? error.name : 'Unknown Error'
+      stack: error instanceof Error ? error.stack : "No stack trace",
+      name: error instanceof Error ? error.name : "Unknown Error",
     });
-    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error occurred' });
+    res
+      .status(500)
+      .json({
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      });
   }
 });
 

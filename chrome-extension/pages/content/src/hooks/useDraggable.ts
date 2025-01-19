@@ -13,7 +13,7 @@ export function useDraggable(initialPosition: Position, storage: MonkeyStorage) 
   // Cleanup function to ensure we always reset dragging state
   const cleanup = useCallback(() => {
     setDragOffset({ x: 0, y: 0 });
-    storage.setState('idle');
+    storage.setAction('idle');
   }, [storage]);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export function useDraggable(initialPosition: Position, storage: MonkeyStorage) 
           y: e.clientY + window.scrollY,
         };
         await storage.setPosition(newPosition);
-        await storage.setState('dragging');
+        await storage.setAction('dragging');
       } catch (error) {
         console.error('Error during drag:', error);
         cleanup();
@@ -32,22 +32,44 @@ export function useDraggable(initialPosition: Position, storage: MonkeyStorage) 
     };
 
     const handleMouseUp = () => {
-      cleanup();
+      try {
+        cleanup();
+      } catch (error) {
+        console.error('Error during mouse up:', error);
+        storage.setAction('idle');
+      }
     };
 
-    // Also handle mouse leave to prevent stuck states
     const handleMouseLeave = () => {
-      cleanup();
+      try {
+        cleanup();
+      } catch (error) {
+        console.error('Error during mouse leave:', error);
+        storage.setAction('idle');
+      }
+    };
+
+    const handleMouseOut = (e: MouseEvent) => {
+      if (e.relatedTarget === null) {
+        try {
+          cleanup();
+        } catch (error) {
+          console.error('Error during mouse out:', error);
+          storage.setAction('idle');
+        }
+      }
     };
 
     if (dragOffset.x !== 0 || dragOffset.y !== 0) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
       document.addEventListener('mouseleave', handleMouseLeave);
+      document.addEventListener('mouseout', handleMouseOut);
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
         document.removeEventListener('mouseleave', handleMouseLeave);
+        document.removeEventListener('mouseout', handleMouseOut);
         cleanup();
       };
     }
@@ -62,7 +84,7 @@ export function useDraggable(initialPosition: Position, storage: MonkeyStorage) 
         height: element.offsetHeight,
       };
 
-      storage.setState('dragging');
+      storage.setAction('dragging');
       setDragOffset({
         x: elementRef.current.width / 2,
         y: elementRef.current.height / 2,
