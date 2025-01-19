@@ -19,6 +19,7 @@ export interface MonkeyData {
   };
   hatId: string;
   user: User | null;
+  currentUrl?: string;
 }
 
 export type WebSocketMessage = {

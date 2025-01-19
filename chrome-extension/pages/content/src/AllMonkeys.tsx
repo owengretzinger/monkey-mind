@@ -5,9 +5,11 @@ import type { ChromeMessage } from '@extension/shared/types/messages';
 import { useState, useEffect } from 'react';
 import { LocalMonkey } from './components/LocalMonkey';
 
+type MonkeyDataWithUrl = MonkeyData & { currentUrl: string };
+
 export default function AllMonkeys() {
   const { user } = useStorage(monkeyStateStorage);
-  const [allMonkeys, setAllMonkeys] = useState<MonkeyData[]>([] as MonkeyData[]);
+  const [allMonkeys, setAllMonkeys] = useState<MonkeyDataWithUrl[]>([]);
   const monkeyState: MonkeyData = useStorage(monkeyStateStorage);
 
   useEffect(() => {
@@ -17,7 +19,7 @@ export default function AllMonkeys() {
 
         switch (wsMessage.type) {
           case 'update': {
-            const monkeyData = wsMessage.data as MonkeyData;
+            const monkeyData = wsMessage.data as MonkeyDataWithUrl;
             setAllMonkeys(current => {
               const filtered = current.filter(m => m.user?.id !== monkeyData.user?.id);
               return [...filtered, monkeyData];
@@ -35,9 +37,13 @@ export default function AllMonkeys() {
 
     // Send initial state when component mounts
     if (user) {
+      const stateWithUrl = {
+        ...monkeyState,
+        currentUrl: window.location.href,
+      };
       chrome.runtime.sendMessage({
         type: 'WS_SEND',
-        data: { type: 'update', data: monkeyState },
+        data: { type: 'update', data: stateWithUrl },
       });
     }
 
@@ -52,9 +58,13 @@ export default function AllMonkeys() {
 
   useEffect(() => {
     if (user) {
+      const stateWithUrl = {
+        ...monkeyState,
+        currentUrl: window.location.href,
+      };
       chrome.runtime.sendMessage({
         type: 'WS_SEND',
-        data: { type: 'update', data: monkeyState },
+        data: { type: 'update', data: stateWithUrl },
       });
     }
   }, [monkeyState, user]);
@@ -74,7 +84,7 @@ export default function AllMonkeys() {
       draggable={false}>
       <LocalMonkey />
       {allMonkeys
-        .filter(monkey => monkey.user?.id !== user?.id)
+        .filter(monkey => monkey.user?.id !== user?.id && monkey.currentUrl === window.location.href)
         .map(monkey => (
           <div
             key={monkey.user!.id}
@@ -93,20 +103,21 @@ export default function AllMonkeys() {
             draggable={false}
             className="relative">
             <MonkeyComponent state={monkey} />
-            <div style={{
-              position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              bottom: '-1.5rem',
-              whiteSpace: 'nowrap',
-              borderRadius: '0.25rem',
-              backgroundColor: 'rgba(255, 255, 255, 0.8)',
-              paddingLeft: '0.25rem',
-              paddingRight: '0.25rem',
-              textAlign: 'center',
-              fontSize: '0.75rem',
-              color: 'black'
-            }}>
+            <div
+              style={{
+                position: 'absolute',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                bottom: '-1.5rem',
+                whiteSpace: 'nowrap',
+                borderRadius: '0.25rem',
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                paddingLeft: '0.25rem',
+                paddingRight: '0.25rem',
+                textAlign: 'center',
+                fontSize: '0.75rem',
+                color: 'black',
+              }}>
               {monkey.user!.displayName}
             </div>
           </div>
