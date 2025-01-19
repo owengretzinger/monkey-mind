@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Note as NoteType, pastelColors, } from '../notes';
-import { useAuth0 } from '@src/auth/Auth0Provider';
+import { pastelColors } from '../notes';
+import type { Note as NoteType } from '../notes';
 
-const tiltAngles = [-2, -1, 0, 1, 2]
+const tiltAngles = [-2, -1, 0, 1, 2];
 
 const formatDate = () => {
   const now = new Date();
@@ -10,17 +10,16 @@ const formatDate = () => {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   });
 };
-
 
 interface NoteProps extends NoteType {
   onDelete: () => void;
 }
 
 const Note = (props: NoteProps) => {
-  const apiURL = "http://localhost:3000/api/notes"
+  const apiURL = 'http://localhost:3000/api/notes';
 
   const [position, setPosition] = useState({ x: props.positionX, y: props.positionY });
   const [isDragging, setIsDragging] = useState(false);
@@ -31,7 +30,7 @@ const Note = (props: NoteProps) => {
 
   const color = props.color;
   const author = props.author;
-  const date = props.date;
+  // const date = props.date;
   const profilePic = props.profilePic;
   const hat = props.hat;
 
@@ -45,7 +44,7 @@ const Note = (props: NoteProps) => {
       const rect = noteRef.current.getBoundingClientRect();
       setDragOffset({
         x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+        y: e.clientY - rect.top,
       });
     }
   };
@@ -54,13 +53,45 @@ const Note = (props: NoteProps) => {
     if (isDragging) {
       setPosition({
         x: e.clientX - dragOffset.x,
-        y: e.clientY - dragOffset.y
+        y: e.clientY - dragOffset.y,
       });
     }
   };
 
   const handleMouseUp = () => {
     setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (noteRef.current) {
+      setIsDragging(true);
+      const touch = e.touches[0];
+      const rect = noteRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top,
+      });
+    }
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (isDragging) {
+      const touch = e.touches[0];
+      setPosition({
+        x: touch.clientX - dragOffset.x,
+        y: touch.clientY - dragOffset.y,
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      handleDeletion(e as unknown as React.MouseEvent);
+    }
   };
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,27 +102,22 @@ const Note = (props: NoteProps) => {
     setNoteContent(e.target.value);
   };
 
-
-
-
   // DATA FLOW
-  const handleDeletion = async (e: React.MouseEvent) => {
+  const handleDeletion = async (e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
-    const res = await fetch(`${apiURL}/${props.id}`, {
+    await fetch(`${apiURL}/${props.id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-      }
+      },
     });
     props.onDelete();
-
   };
-
 
   const handleBlur = async () => {
     console.log('Note content saved:', noteContent);
     if (noteTitle.trim() !== '') {
-      const res = await fetch(`${apiURL}/${props.id}`, {
+      await fetch(`${apiURL}/${props.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +134,7 @@ const Note = (props: NoteProps) => {
           tilt: tiltAngle,
           profilePic: profilePic,
           hat: hat,
-          link: window.location.href
+          link: window.location.href,
         }),
       });
     }
@@ -136,7 +162,7 @@ const Note = (props: NoteProps) => {
               tilt: tiltAngle,
               profilePic: profilePic,
               hat: hat,
-              link: window.location.href
+              link: window.location.href,
             }),
           });
 
@@ -150,159 +176,195 @@ const Note = (props: NoteProps) => {
     };
 
     createNote();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [noteTitle]); // Only trigger when noteTitle changes
-
-
 
   useEffect(() => {
     if (isDragging) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('touchmove', handleTouchMove);
+      window.addEventListener('touchend', handleTouchEnd);
     }
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDragging, dragOffset]);
-
-
-
 
   return (
     <div
       ref={noteRef}
+      role="article"
+      aria-label={`Note: ${noteTitle}`}
       style={{
         position: 'absolute',
-        cursor: 'move',
-        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
         left: `${position.x}px`,
         top: `${position.y}px`,
         transform: `rotate(${tiltAngle}deg)`,
         zIndex: 2147483646,
-        outline: 'none'
-      }}
-      onMouseDown={handleMouseDown}
-    >
-      <div style={{
-        width: '12rem',
-        height: '12rem',
-        padding: '0.5rem',
-        borderRadius: '1px',
-        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-        position: 'relative',
-        backgroundColor: bgColor === 'bg-yellow-100' ? '#fef9c3' :
-          bgColor === 'bg-pink-100' ? '#fce7f3' :
-            bgColor === 'bg-blue-100' ? '#dbeafe' :
-              bgColor === 'bg-green-100' ? '#dcfce7' :
-                '#f8fafc'
       }}>
+      <div style={{ position: 'relative' }}>
         <button
+          aria-label="Drag note"
           style={{
             position: 'absolute',
-            top: '6px',
-            right: '6px',
-            width: '2px',
-            height: '2px',
-            borderRadius: '50%',
-            backgroundColor: '#ef4444',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '1.5rem',
+            cursor: 'move',
+            backgroundColor: 'transparent',
             border: 'none',
-            cursor: 'pointer',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            zIndex: 2147483647,
-            padding: '6px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
+            zIndex: 2147483646,
           }}
-          onClick={handleDeletion}
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+          onKeyDown={handleKeyDown}
         />
-
-        <div style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'center',
-          gap: '0.5rem',
-          marginBottom: '0.5rem'
-        }}>
-          <div style={{
-            width: '3rem',
-            height: '3rem',
-            borderRadius: '9999px',
-            overflow: 'hidden',
-            flexShrink: 0,
-            backgroundColor: '#e5e7eb'
+        <div
+          style={{
+            width: '12rem',
+            height: '12rem',
+            padding: '0.5rem',
+            borderRadius: '1px',
+            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+            position: 'relative',
+            backgroundColor:
+              bgColor === 'bg-yellow-100'
+                ? '#fef9c3'
+                : bgColor === 'bg-pink-100'
+                  ? '#fce7f3'
+                  : bgColor === 'bg-blue-100'
+                    ? '#dbeafe'
+                    : bgColor === 'bg-green-100'
+                      ? '#dcfce7'
+                      : '#f8fafc',
           }}>
-            <img
-              src={profilePic}
-              alt="Profile"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
-              }}
-            />
-          </div>
-
-          <div style={{
-            flex: '1',
-            minWidth: '0'
-          }}>
-            <input
-              type="text"
-              value={noteTitle}
-              onChange={handleTitleChange}
-              placeholder="Untitled Note"
-              style={{
-                width: '100%',
-                backgroundColor: 'transparent',
-                fontWeight: '500',
-                paddingLeft: '-0.5rem',
-                fontSize: '0.875rem',
-                lineHeight: '1rem',
-                outline: 'none',
-                border: 'none',
-                color: '#374151', // Adding dark gray color for text
-              }}
-            />
-            <div style={{
+          <button
+            aria-label="Delete note"
+            tabIndex={0}
+            style={{
+              position: 'absolute',
+              top: '6px',
+              right: '6px',
+              width: '2px',
+              height: '2px',
+              borderRadius: '50%',
+              backgroundColor: '#ef4444',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              zIndex: 2147483647,
+              padding: '6px',
               display: 'flex',
-              flexDirection: 'column',
-              fontSize: '0.65rem',
-              color: '#6b7280'
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onClick={handleDeletion}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                handleDeletion(e);
+              }
+            }}
+          />
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              marginBottom: '0.5rem',
             }}>
-              <div style={{
-                fontWeight: '500',
+            <div
+              style={{
+                width: '3rem',
+                height: '3rem',
+                borderRadius: '9999px',
                 overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
+                flexShrink: 0,
+                backgroundColor: '#e5e7eb',
               }}>
-                <div style={{
-                  fontSize: '0.7rem',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
+              <img
+                src={profilePic}
+                alt="Profile"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+              />
+            </div>
+
+            <div
+              style={{
+                flex: '1',
+                minWidth: '0',
+              }}>
+              <input
+                type="text"
+                value={noteTitle}
+                onChange={handleTitleChange}
+                placeholder="Untitled Note"
+                aria-label="Note title"
+                style={{
+                  width: '100%',
+                  backgroundColor: 'transparent',
+                  fontWeight: '500',
+                  paddingLeft: '-0.5rem',
+                  fontSize: '0.875rem',
+                  lineHeight: '1rem',
+                  outline: 'none',
+                  border: 'none',
+                  color: '#374151', // Adding dark gray color for text
+                }}
+              />
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  fontSize: '0.65rem',
+                  color: '#6b7280',
                 }}>
-                                  {author}
-
+                <div
+                  style={{
+                    fontWeight: '500',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                  <div
+                    style={{
+                      fontSize: '0.7rem',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
+                    {author}
+                  </div>
+                  {formatDate()}
                 </div>
-                {formatDate()}
-
               </div>
             </div>
           </div>
-        </div>
 
-        <div style={{
-          width: '100%',
-          height: 'calc(100% - 2.75rem)',
-          borderRadius: '1px',
-          position: 'relative'
-        }}>
-          <div style={{
-            width: '90%',
-            height: '100%',
-            padding: '0 0.5rem',
-            backgroundImage: `
+          <div
+            style={{
+              width: '100%',
+              height: 'calc(100% - 2.75rem)',
+              borderRadius: '1px',
+              position: 'relative',
+            }}>
+            <div
+              style={{
+                width: '90%',
+                height: '100%',
+                padding: '0 0.5rem',
+                backgroundImage: `
               repeating-linear-gradient(
                 transparent,
                 transparent 20px,
@@ -310,33 +372,32 @@ const Note = (props: NoteProps) => {
                 #6b728080 21px
               )
             `,
-            backgroundPosition: '0 2px'
-          }}>
-            <textarea
-              onBlur={handleBlur}
-              onChange={handleContentChange}
-              placeholder="Type your note here..."
-              style={{
-                width: '100%',
-                height: '100%',
-                backgroundColor: 'transparent',
-                resize: 'none',
-                outline: 'none',
-                fontSize: '0.5rem',
-                lineHeight: '21px',
-                paddingTop: '2px',
-                paddingLeft: '0.25rem',
-                paddingRight: '0.25rem',
-                WebkitMask: 'linear-gradient(transparent, black 10px)',
-                overflowY: 'auto',
-                border: 'none'
-              }}
-            />
+                backgroundPosition: '0 2px',
+              }}>
+              <textarea
+                onBlur={handleBlur}
+                onChange={handleContentChange}
+                placeholder="Type your note here..."
+                aria-label="Note content"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: 'transparent',
+                  resize: 'none',
+                  outline: 'none',
+                  fontSize: '0.5rem',
+                  lineHeight: '21px',
+                  paddingTop: '2px',
+                  paddingLeft: '0.25rem',
+                  paddingRight: '0.25rem',
+                  WebkitMask: 'linear-gradient(transparent, black 10px)',
+                  overflowY: 'auto',
+                  border: 'none',
+                }}
+              />
+            </div>
           </div>
         </div>
-
-
-
       </div>
     </div>
   );

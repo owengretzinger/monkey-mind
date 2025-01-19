@@ -1,7 +1,6 @@
 import '@src/Popup.css';
 import { MonkeyComponent, useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
 import { HATS, MONKEY_COLORS, monkeyStateStorage } from '@extension/storage';
-import type { User } from '@extension/storage';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const Popup = () => {
@@ -17,25 +16,28 @@ const Popup = () => {
     }
   }, [isEditingName]);
 
-  const writeToDatabase = useCallback(async (userData: User) => {
-    const apiUrl = 'http://localhost:3000/api/users/newUser';
-    console.log(userData);
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData),
-    });
+  const writeToDatabase = useCallback(
+    async (userData: { id: string; displayName: string; name: string; email: string }) => {
+      const apiUrl = 'http://localhost:3000/api/users/newUser';
+      console.log(userData);
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Error writing to database:', errorData);
-    } else {
-      const responseData = await response.json();
-      console.log('User data written successfully:', responseData);
-    }
-  }, []);
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error writing to database:', errorData);
+      } else {
+        const responseData = await response.json();
+        console.log('User data written successfully:', responseData);
+      }
+    },
+    [],
+  );
 
   const generateMonkeyText = async () => {
     const [tab] = await chrome.tabs.query({ currentWindow: true, active: true });
@@ -52,9 +54,16 @@ const Popup = () => {
   };
 
   const leaveNote = async () => {
+    console.log(
+      'Sending message to content script to add note',
+      monkey.user.id,
+      monkey.user.displayName
+    )
     const [tab] = await chrome.tabs.query({ currentWindow: true, active: true });
     if (tab.id) {
-      chrome.tabs.sendMessage(tab.id, { type: 'ADD_NOTE', username: user?.name, profilePic: user?.picture });
+      chrome.tabs.sendMessage(tab.id, { type: 'ADD_NOTE', id: monkey.user.id, username: monkey.user.displayName });
+    } else {
+      console.log('No tab found');
     }
   };
 
@@ -72,7 +81,11 @@ const Popup = () => {
       displayName: `${userId.slice(0, 6)}`,
     };
     monkeyStateStorage.setUser(user);
-    writeToDatabase(user);
+    writeToDatabase({
+      ...user,
+      email: user.displayName + '@gmail.com',
+      name: user.displayName,
+    });
   }
 
   return (

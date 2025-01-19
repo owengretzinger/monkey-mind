@@ -101,11 +101,21 @@ const Notes = () => {
 
     // Add Chrome Extension Listener For Spawning New Notes
     useEffect(() => {
-        const messageListener = async (message: { type: string, username: string, profilePic: string }) => {
+        const messageListener = async (message: { type: string, username: string, id: string }) => {
             if (message.type === 'ADD_NOTE') {
-                console.log(message.username, message.profilePic, "HI THERE STUPID FUC");
+                console.log(message.username, message.id, "HI THERE STUPID FUC");
                 setUserName(message.username);
-                setUserProfilePic(message.profilePic);
+
+
+                let profilePic = 'default-avatar.png';
+                const response = await fetch(`https://ui-avatars.com/api/?name=${encodeURIComponent(message.username)}`);
+                if (response.ok) {
+                    profilePic = response.url;
+                } else {
+                    console.error('Failed to fetch avatar');
+                }
+
+                setUserProfilePic(profilePic);
 
                 const newNote: Note = {
                     ...defaultNote,
@@ -115,7 +125,7 @@ const Notes = () => {
                     .slice(0, 12),
                     author: message.username,
                     hat: hatId,
-                    profilePic:  message.profilePic,
+                    profilePic,
                 };
                 setAllNotes(prev => [...prev, newNote]);
 
