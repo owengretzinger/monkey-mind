@@ -1,23 +1,63 @@
-import { useEffect, useState } from 'react';
-import { LocalMonkey } from './components/LocalMonkey';
+import { Monkey, useStorage } from '@extension/shared';
 import { monkeyStateStorage } from '@extension/storage';
-import { MonkeyVisual, useStorage } from '@extension/shared';
 import type { MonkeyData } from '@extension/storage';
+import type { ChromeMessage } from '@extension/shared/types/messages';
+import { useState, useEffect } from 'react';
+import { LocalMonkey } from './components/LocalMonkey';
 
-// const WS_URL = 'ws://localhost:3000';
-
-export default function Monkey() {
+export default function AllMonkeys() {
   const { user } = useStorage(monkeyStateStorage);
-  const [otherMonkeys] = useState<MonkeyData[]>([] as MonkeyData[]);
+  const [allMonkeys, setAllMonkeys] = useState<MonkeyData[]>([] as MonkeyData[]);
+  const monkeyState: MonkeyData = useStorage(monkeyStateStorage);
 
-  // WebSocket effect
   useEffect(() => {
-    if (!user) return;
+    const messageListener = (message: ChromeMessage) => {
+      if (message.type === 'WS_MESSAGE') {
+        const wsMessage = message.data;
 
-    // const ws = new WebSocket(WS_URL);
+        switch (wsMessage.type) {
+          case 'update': {
+            const monkeyData = wsMessage.data as MonkeyData;
+            setAllMonkeys(current => {
+              const filtered = current.filter(m => m.user?.id !== monkeyData.user?.id);
+              return [...filtered, monkeyData];
+            });
+            break;
+          }
+          case 'disconnect': {
+            const { userId } = wsMessage.data as { userId: string };
+            setAllMonkeys(current => current.filter(m => m.user?.id !== userId));
+            break;
+          }
+        }
+      }
+    };
 
-    // websocket events
+    // Send initial state when component mounts
+    if (user) {
+      chrome.runtime.sendMessage({
+        type: 'WS_SEND',
+        data: { type: 'update', data: monkeyState },
+      });
+    }
+
+    // Add chrome runtime message listener
+    chrome.runtime.onMessage.addListener(messageListener);
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(messageListener);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      chrome.runtime.sendMessage({
+        type: 'WS_SEND',
+        data: { type: 'update', data: monkeyState },
+      });
+    }
+  }, [monkeyState, user]);
 
   return (
     <div
@@ -33,9 +73,28 @@ export default function Monkey() {
       }}
       draggable={false}>
       <LocalMonkey />
-      {otherMonkeys.map(monkey => (
-        <MonkeyVisual key={monkey.user!.id} state={monkey} />
-      ))}
+      {allMonkeys
+        .filter(monkey => monkey.user?.id !== user?.id)
+        .map(monkey => (
+          <div
+            key={monkey.user!.id}
+            style={{
+              position: 'absolute',
+              left: monkey.position.x,
+              top: monkey.position.y,
+              // cursor: 'move',
+              userSelect: 'none',
+              pointerEvents: 'auto',
+              width: '64px',
+              height: '64px',
+              zIndex: 1,
+              WebkitUserSelect: 'none',
+            }}
+            draggable={false}
+            className="relative">
+            <Monkey state={monkey} />
+          </div>
+        ))}
     </div>
   );
 }

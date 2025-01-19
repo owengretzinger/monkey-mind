@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { useStorage, MonkeyVisual } from '@extension/shared';
+import { useStorage, Monkey } from '@extension/shared';
 import { monkeyStateStorage } from '@extension/storage';
 import { SpeechBubble } from './SpeechBubble';
 import { useDraggable } from '../hooks/useDraggable';
@@ -165,7 +165,7 @@ export const LocalMonkey: React.FC = () => {
           isOnRightSide={monkey.position.x > window.innerWidth / 2}
         />
       )}
-      <MonkeyVisual state={monkey} />
+      <Monkey state={monkey} />
     </div>
   );
 };

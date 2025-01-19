@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 interface MonkeyVisualProps {
   state: MonkeyData;
 }
-export const MonkeyVisual = ({ state }: MonkeyVisualProps) => {
+export const Monkey = ({ state }: MonkeyVisualProps) => {
   const [prevPosition, setPrevPosition] = useState(state.position);
   const [direction, setDirection] = useState<'left' | 'right'>('right');
   const { currentAction, color, hatId } = state;

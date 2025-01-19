@@ -1,5 +1,5 @@
 import '@src/Popup.css';
-import { useStorage, withErrorBoundary, withSuspense, MonkeyVisual } from '@extension/shared';
+import { useStorage, withErrorBoundary, withSuspense, Monkey } from '@extension/shared';
 import { HATS, MONKEY_COLORS, monkeyStateStorage } from '@extension/storage';
 import { useAuth0 } from './auth/Auth0Provider';
 import { Login } from './components/Login';
@@ -45,12 +45,13 @@ const Popup = () => {
     console.log(isLoading, isAuthenticated, user, 'youasdf af');
 
     // Check if not loading and authenticated
-    if (!isLoading && isAuthenticated && user) {
+    if (!isLoading && isAuthenticated && user && user.email && user.name) {
       console.log(isLoading, isAuthenticated, user, 'you are stupdi af');
       writeToDatabase({
-        email: user.email ?? '',
-        name: user.name ?? '',
+        email: user.email,
+        name: user.name,
       });
+      monkeyStateStorage.setUser({ id: user.email, displayName: user.name });
     }
   }, [isAuthenticated, isLoading, user, writeToDatabase]);
 
@@ -118,7 +119,7 @@ const Popup = () => {
           )}
           <div className="flex flex-col items-center justify-center space-y-2 p-4">
             <div className="relative size-16">
-              <MonkeyVisual
+              <Monkey
                 state={{
                   ...monkey,
                   currentAction: 'idle',
