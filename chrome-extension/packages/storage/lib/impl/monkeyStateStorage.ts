@@ -12,11 +12,16 @@ interface Position {
 interface MonkeyData {
   position: Position;
   state: MonkeyState;
+  color: {
+    hue: number;
+    isDark: boolean;
+  };
 }
 
 type MonkeyStorage = BaseStorage<MonkeyData> & {
   setPosition: (position: Position) => Promise<void>;
   setState: (state: MonkeyState) => Promise<void>;
+  setColor: (color: { hue: number; isDark: boolean }) => Promise<void>;
 };
 
 const storage = createStorage<MonkeyData>(
@@ -27,6 +32,7 @@ const storage = createStorage<MonkeyData>(
       y: Math.floor(window.innerHeight * 0.25),
     },
     state: 'idle',
+    color: { hue: 0, isDark: true }, // Default brown color
   },
   {
     storageEnum: StorageEnum.Local,
@@ -43,6 +49,10 @@ export const monkeyStateStorage: MonkeyStorage = {
   setState: async (state: MonkeyState) => {
     const current = await storage.get();
     await storage.set({ ...current, state });
+  },
+  setColor: async (color: { hue: number; isDark: boolean }) => {
+    const current = await storage.get();
+    await storage.set({ ...current, color });
   },
 };
 
