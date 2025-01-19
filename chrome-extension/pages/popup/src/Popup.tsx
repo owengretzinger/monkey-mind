@@ -100,7 +100,7 @@ const Popup = () => {
     if (tab.id) {
       chrome.tabs.sendMessage(tab.id, { type: 'ADD_NOTE' });
     }
-  }
+  };
 
   // Show loading state
   if (isLoading) {
@@ -116,25 +116,22 @@ const Popup = () => {
     return <Login />;
   }
 
-
-
   return (
     <div className={`App`}>
       <header className={`App-header text-amber-950`}>
         <div className="bg-amber-800/5">
-
-        {user && (
-          <div className="flex w-full items-center gap-1 p-1 text-left text-[10px]">
-            Logged in as
-            <img src={user.picture} alt="Profile" className="inline size-4 rounded-full" />
-            {user.name}.
-            <button className="underline" onClick={() => logout()}>
-              Log Out
-            </button>
-          </div>
-        )}
-        <div className="flex flex-col items-center justify-center space-y-2 p-4">
-          {/* {user && (
+          {user && (
+            <div className="flex w-full items-center gap-1 p-1 text-left text-[10px]">
+              Logged in as
+              <img src={user.picture} alt="Profile" className="inline size-4 rounded-full" />
+              {user.name}.
+              <button className="underline" onClick={() => logout()}>
+                Log Out
+              </button>
+            </div>
+          )}
+          <div className="flex flex-col items-center justify-center space-y-2 p-4">
+            {/* {user && (
             <div className="w-full">
               <div className="mb-2 flex items-center space-x-2">
                 {user.picture && <img src={user.picture} alt="Profile" className="size-8 rounded-full" />}
@@ -149,34 +146,34 @@ const Popup = () => {
             </div>
           )} */}
 
-          <div className="relative size-16">
-            <MonkeyVisual selectedHat={selectedHat} state="idle" color={monkeyData.color} />
-          </div>
+            <div className="relative size-16">
+              <MonkeyVisual selectedHat={selectedHat} state="idle" color={monkeyData.color} />
+            </div>
 
-          {/* choose color */}
-          <div className="flex gap-1">
-            {MONKEY_COLORS.map(({ hue, hexCode, isDark }) => (
-              <div key={hexCode} className="flex flex-col items-center">
-                <button
-                  className={`size-5 rounded-full ${monkeyData.color.hue === hue && monkeyData.color.isDark === isDark ? 'ring-2 ring-amber-800' : ''}`}
-                  style={{
-                    backgroundColor: hexCode,
-                  }}
-                  onClick={() => {
-                    monkeyStateStorage.setColor({
-                      hue,
-                      isDark,
-                    });
-                  }}
-                />
-              </div>
-            ))}
-          </div>
+            {/* choose color */}
+            <div className="flex gap-1">
+              {MONKEY_COLORS.map(({ hue, hexCode, isDark }) => (
+                <div key={hexCode} className="flex flex-col items-center">
+                  <button
+                    className={`size-5 rounded-full ${monkeyData.color.hue === hue && monkeyData.color.isDark === isDark ? 'ring-2 ring-amber-800' : ''}`}
+                    style={{
+                      backgroundColor: hexCode,
+                    }}
+                    onClick={() => {
+                      monkeyStateStorage.setColor({
+                        hue,
+                        isDark,
+                      });
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
 
-          <div className="pb-1 text-center">
-            <p className="text-sm font-medium text-amber-900">{currentHat.name}</p>
-            <p className="text-xs text-amber-900/75">{currentHat.description_for_user}</p>
-          </div>
+            <div className="pb-1 text-center">
+              <p className="text-sm font-medium text-amber-900">{currentHat.name}</p>
+              <p className="text-xs text-amber-900/75">{currentHat.description_for_user}</p>
+            </div>
 
             <div className="mx-5 flex flex-row flex-wrap justify-center gap-2">
               {HATS.map(hat => (
@@ -199,9 +196,6 @@ const Popup = () => {
               </button>
               <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={leaveNote}>
                 Leave A Note
-              </button>
-              <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={() => logout()}>
-                Log Out
               </button>
             </div>
           </div>
