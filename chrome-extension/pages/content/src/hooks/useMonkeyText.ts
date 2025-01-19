@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { HATS, monkeyStateStorage } from '@extension/storage';
+import { SERVER_URL } from '@extension/shared';
 
 export function useMonkeyText(selectedHat: string) {
   const [speechText, setSpeechText] = useState<string>('');
@@ -27,7 +28,7 @@ export function useMonkeyText(selectedHat: string) {
           setSpeechText("Hello! I'm Monkey Mind. I'm here to give you a new perspective.");
           await monkeyStateStorage.setAction('talking');
         } else {
-          const response = await fetch('http://localhost:3000/api/mascot/cheer', {
+          const response = await fetch(SERVER_URL + '/api/mascot/cheer', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

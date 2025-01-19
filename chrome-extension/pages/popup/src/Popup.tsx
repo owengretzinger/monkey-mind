@@ -1,5 +1,5 @@
 import '@src/Popup.css';
-import { MonkeyComponent, useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
+import { MonkeyComponent, SERVER_URL, useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
 import { HATS, MONKEY_COLORS, monkeyStateStorage } from '@extension/storage';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -18,7 +18,7 @@ const Popup = () => {
 
   const writeToDatabase = useCallback(
     async (userData: { id: string; displayName: string; name: string; email: string }) => {
-      const apiUrl = 'http://localhost:3000/api/users/newUser';
+      const apiUrl = SERVER_URL + '/api/users/newUser';
       console.log(userData);
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -54,11 +54,7 @@ const Popup = () => {
   };
 
   const leaveNote = async () => {
-    console.log(
-      'Sending message to content script to add note',
-      monkey.user.id,
-      monkey.user.displayName
-    )
+    console.log('Sending message to content script to add note', monkey.user.id, monkey.user.displayName);
     const [tab] = await chrome.tabs.query({ currentWindow: true, active: true });
     if (tab.id) {
       chrome.tabs.sendMessage(tab.id, { type: 'ADD_NOTE', id: monkey.user.id, username: monkey.user.displayName });

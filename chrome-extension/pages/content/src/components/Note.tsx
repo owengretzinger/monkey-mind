@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { pastelColors } from '../notes';
 import type { Note as NoteType } from '../notes';
+import { SERVER_URL } from '@extension/shared';
 
 const tiltAngles = [-2, -1, 0, 1, 2];
 
@@ -19,7 +20,7 @@ interface NoteProps extends NoteType {
 }
 
 const Note = (props: NoteProps) => {
-  const apiURL = 'http://localhost:3000/api/notes';
+  const apiURL = SERVER_URL + '/api/notes';
 
   const [position, setPosition] = useState({ x: props.positionX, y: props.positionY });
   const [isDragging, setIsDragging] = useState(false);
