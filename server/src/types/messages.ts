@@ -16,6 +16,7 @@ export interface MonkeyPosition {
     url: string;
     ownerName: string;
     selectedHat?: string;
+    isHiding?: boolean;
 }
 
 export interface WebSocketMessage {

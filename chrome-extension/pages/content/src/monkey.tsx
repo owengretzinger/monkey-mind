@@ -13,6 +13,7 @@ export default function Monkey() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('Anonymous');
   const selectedHat = useStorage(hatStorage);
+  const [prevPositions, setPrevPositions] = useState<Record<string, { x: number; y: number }>>({});
 
   // Add effect to get user name
   useEffect(() => {
@@ -41,8 +42,23 @@ export default function Monkey() {
 
     const ws = new WebSocket(WS_URL);
     
+    const isOutOfBounds = (position: { x: number; y: number }) => {
+      return position.x < -100 || 
+             position.x > window.innerWidth + 100 || 
+             position.y < -100 || 
+             position.y > window.innerHeight + 100;
+    };
+
+    const calculateDirection = (currentPos: { x: number; y: number }, prevPos: { x: number; y: number }) => {
+      if (Math.abs(currentPos.x - prevPos.x) > 1) { // Only change direction if moved more than 1px
+        return currentPos.x > prevPos.x ? 'right' : 'left';
+      }
+      return null; // Keep existing direction if not moving horizontally
+    };
+
     ws.onopen = () => {
       console.log('WebSocket Connected');
+      const isHiding = storedData.state === 'hiding' || isOutOfBounds(storedData.position);
       ws.send(JSON.stringify({
         type: 'monkey_position',
         data: {
@@ -52,26 +68,52 @@ export default function Monkey() {
           direction: storedData.state === 'walking' ? 'right' : 'left',
           url: window.location.href,
           ownerName: userName,
-          selectedHat: selectedHat
+          selectedHat: selectedHat,
+          isHiding
         }
       }));
+      setPrevPositions({ [userEmail]: storedData.position });
     };
 
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
       if (message.type === 'monkey_position') {
-        const { id, position, state, direction, ownerName, selectedHat } = message.data;
+        const { id, position, state, direction, ownerName, selectedHat, isHiding } = message.data;
         if (id !== userEmail) {
-          setOtherMonkeys(prev => ({
-            ...prev,
-            [id]: { 
-              position, 
-              state,
-              direction: direction || 'left',
-              ownerName,
-              selectedHat
-            }
-          }));
+          if (!isHiding && !isOutOfBounds(position)) {
+            setOtherMonkeys(prev => {
+              const prevMonkey = prev[id];
+              const prevPos = prevPositions[id] || position;
+              const newDirection = calculateDirection(position, prevPos) || 
+                                 prevMonkey?.direction || 
+                                 direction || 
+                                 'left';
+
+              setPrevPositions(prev => ({ ...prev, [id]: position }));
+
+              return {
+                ...prev,
+                [id]: { 
+                  position, 
+                  state,
+                  direction: newDirection,
+                  ownerName,
+                  selectedHat
+                }
+              };
+            });
+          } else {
+            setOtherMonkeys(prev => {
+              const newMonkeys = { ...prev };
+              delete newMonkeys[id];
+              return newMonkeys;
+            });
+            setPrevPositions(prev => {
+              const newPositions = { ...prev };
+              delete newPositions[id];
+              return newPositions;
+            });
+          }
         }
       } else if (message.type === 'monkey_left') {
         const { id } = message.data;
@@ -80,23 +122,43 @@ export default function Monkey() {
           delete newMonkeys[id];
           return newMonkeys;
         });
+        setPrevPositions(prev => {
+          const newPositions = { ...prev };
+          delete newPositions[id];
+          return newPositions;
+        });
       }
     };
 
     const sendPositionUpdate = () => {
       if (ws.readyState === WebSocket.OPEN) {
+        const isHiding = storedData.state === 'hiding' || isOutOfBounds(storedData.position);
+        const prevPos = prevPositions[userEmail] || storedData.position;
+        const newDirection = calculateDirection(storedData.position, prevPos) || 
+                           (storedData.state === 'walking' ? 'right' : 'left');
+
+        setPrevPositions(prev => ({ ...prev, [userEmail]: storedData.position }));
+
         ws.send(JSON.stringify({
           type: 'monkey_position',
           data: {
             id: userEmail,
             position: storedData.position,
             state: storedData.state,
-            direction: storedData.state === 'walking' ? 'right' : 'left',
+            direction: newDirection,
             url: window.location.href,
             ownerName: userName,
-            selectedHat: selectedHat
+            selectedHat: selectedHat,
+            isHiding
           }
         }));
+
+        if (isHiding) {
+          ws.send(JSON.stringify({
+            type: 'monkey_left',
+            data: { id: userEmail }
+          }));
+        }
       }
     };
 

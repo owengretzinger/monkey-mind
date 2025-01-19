@@ -18,44 +18,40 @@ interface OtherMonkeysProps {
 }
 
 export const OtherMonkeys: React.FC<OtherMonkeysProps> = ({ monkeys }) => {
-  console.log('Rendering OtherMonkeys with:', monkeys);
   return (
     <>
-      {Object.entries(monkeys).map(([id, monkey]) => {
-        console.log('Rendering monkey:', id, monkey);
-        return monkey.state !== 'hiding' && (
+      {Object.entries(monkeys).map(([id, monkey]) => (
+        <div
+          key={id}
+          style={{
+            position: 'absolute',
+            left: monkey.position.x,
+            top: monkey.position.y,
+            pointerEvents: 'none',
+            zIndex: 9998,
+          }}>
           <div
-            key={id}
             style={{
               position: 'absolute',
-              left: monkey.position.x,
-              top: monkey.position.y,
-              pointerEvents: 'none',
-              zIndex: 9998,
+              top: '-20px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              color: 'white',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              whiteSpace: 'nowrap',
             }}>
-            <div
-              style={{
-                position: 'absolute',
-                top: '-20px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                color: 'white',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                fontSize: '12px',
-                whiteSpace: 'nowrap',
-              }}>
-              {monkey.ownerName || 'Anonymous'}
-            </div>
-            <MonkeyVisual
-              selectedHat={monkey.selectedHat}
-              direction={monkey.direction || 'left'}
-              state={monkey.state}
-            />
+            {monkey.ownerName || 'Anonymous'}
           </div>
-        );
-      })}
+          <MonkeyVisual
+            selectedHat={monkey.selectedHat}
+            direction={monkey.direction || 'left'}
+            state={monkey.state}
+          />
+        </div>
+      ))}
     </>
   );
 }; 
