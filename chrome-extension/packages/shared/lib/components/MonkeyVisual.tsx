@@ -17,28 +17,28 @@ export const MonkeyVisual = ({ selectedHat, direction = 'left', state, className
       case 'walking':
       case 'leaving':
         return {
-          bodyDark: 'animations/body-dark/walking.GIF',
-          bodyLight: 'animations/body-light/walking.GIF',
-          skin: 'animations/skin/walking.GIF',
+          bodyDark: 'monkey-animations/body-dark/walking.GIF',
+          bodyLight: 'monkey-animations/body-light/walking.GIF',
+          skin: 'monkey-animations/skin/walking.GIF',
         };
       case 'dragging':
         return {
-          bodyDark: 'animations/body-dark/flailing.GIF',
-          bodyLight: 'animations/body-light/flailing.GIF',
-          skin: 'animations/skin/flailing.GIF',
+          bodyDark: 'monkey-animations/body-dark/flailing.GIF',
+          bodyLight: 'monkey-animations/body-light/flailing.GIF',
+          skin: 'monkey-animations/skin/flailing.GIF',
         };
       case 'talking':
         return {
-          bodyDark: 'animations/body-dark/speaking.GIF',
-          bodyLight: 'animations/body-light/speaking.GIF',
-          skin: 'animations/skin/speaking.GIF',
+          bodyDark: 'monkey-animations/body-dark/speaking.GIF',
+          bodyLight: 'monkey-animations/body-light/speaking.GIF',
+          skin: 'monkey-animations/skin/speaking.GIF',
         };
       case 'thinking':
       default:
         return {
-          bodyDark: 'animations/body-dark/idle.GIF',
-          bodyLight: 'animations/body-light/idle.GIF',
-          skin: 'animations/skin/idle.GIF',
+          bodyDark: 'monkey-animations/body-dark/idle.GIF',
+          bodyLight: 'monkey-animations/body-light/idle.GIF',
+          skin: 'monkey-animations/skin/idle.GIF',
         };
     }
   };
@@ -84,7 +84,7 @@ export const MonkeyVisual = ({ selectedHat, direction = 'left', state, className
       />
       {currentHat && state !== 'dragging' && (
         <img
-          src={chrome.runtime.getURL(`hats/${currentHat.id}.PNG`)}
+          src={chrome.runtime.getURL(`hats/on-monkey/${currentHat.id}.PNG`)}
           alt={currentHat.name}
           style={{
             position: 'absolute',
