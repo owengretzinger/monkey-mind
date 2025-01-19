@@ -116,7 +116,7 @@ export interface MonkeyData {
     isDark: boolean;
   };
   hatId: HatId;
-  user: User | null;
+  user: User;
 }
 
 export type MonkeyStorage = BaseStorage<MonkeyData> & {
@@ -124,7 +124,8 @@ export type MonkeyStorage = BaseStorage<MonkeyData> & {
   setAction: (action: MonkeyAction) => Promise<void>;
   setColor: (color: { hue: number; isDark: boolean }) => Promise<void>;
   setHat: (hat: HatId) => Promise<void>;
-  setUser: (user: User | null) => Promise<void>;
+  setUser: (user: User) => Promise<void>;
+  setDisplayName: (displayName: string) => Promise<void>;
 };
 
 const storage = createStorage<MonkeyData>(
@@ -137,7 +138,10 @@ const storage = createStorage<MonkeyData>(
     currentAction: 'hiding',
     color: { hue: 0, isDark: true },
     hatId: 'none',
-    user: null,
+    user: {
+      id: '',
+      displayName: '',
+    },
   },
   {
     storageEnum: StorageEnum.Local,
@@ -163,8 +167,16 @@ export const monkeyStateStorage: MonkeyStorage = {
     const current = await storage.get();
     await storage.set({ ...current, hatId: hat });
   },
-  setUser: async (user: User | null) => {
+  setUser: async (user: User) => {
     const current = await storage.get();
     await storage.set({ ...current, user });
   },
+  setDisplayName: async (displayName: string) => {
+    const current = await storage.get();
+    await storage.set({ ...current, user: { ...current.user, displayName } });
+  },
+};
+
+export const resetMonkeyStorage = async () => {
+  await chrome.storage.local.remove('monkey-data');
 };

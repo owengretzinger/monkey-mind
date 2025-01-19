@@ -1,4 +1,4 @@
-import { Monkey, useStorage } from '@extension/shared';
+import { MonkeyComponent, useStorage } from '@extension/shared';
 import { monkeyStateStorage } from '@extension/storage';
 import type { MonkeyData } from '@extension/storage';
 import type { ChromeMessage } from '@extension/shared/types/messages';
@@ -92,7 +92,23 @@ export default function AllMonkeys() {
             }}
             draggable={false}
             className="relative">
-            <Monkey state={monkey} />
+            <MonkeyComponent state={monkey} />
+            <div style={{
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              bottom: '-1.5rem',
+              whiteSpace: 'nowrap',
+              borderRadius: '0.25rem',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              paddingLeft: '0.25rem',
+              paddingRight: '0.25rem',
+              textAlign: 'center',
+              fontSize: '0.75rem',
+              color: 'black'
+            }}>
+              {monkey.user!.displayName}
+            </div>
           </div>
         ))}
     </div>

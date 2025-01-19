@@ -4,19 +4,8 @@
     "default_width": 400,
     "default_height": 600
   },
-  "permissions": [
-    "storage",
-    "scripting",
-    "tabs",
-    "notifications",
-    "webNavigation",
-    "background",
-    "offscreen"
-  ],
-  "host_permissions": [
-    "https://*.auth0.com/*"
-  ],
+  "permissions": ["storage", "scripting", "tabs", "notifications", "webNavigation", "background", "offscreen"],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; frame-src 'self' https://*.auth0.com"
+    "extension_pages": "script-src 'self'; object-src 'self'; frame-src 'self'"
   }
-} 
+}

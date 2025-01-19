@@ -1,26 +1,23 @@
 import '@src/Popup.css';
-import { useStorage, withErrorBoundary, withSuspense, Monkey } from '@extension/shared';
+import { MonkeyComponent, useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
 import { HATS, MONKEY_COLORS, monkeyStateStorage } from '@extension/storage';
-import { useAuth0 } from './auth/Auth0Provider';
-import { Login } from './components/Login';
-import { useState, useEffect, useCallback } from 'react';
+import type { User } from '@extension/storage';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const Popup = () => {
-  const { isAuthenticated, isLoading, logout, user } = useAuth0();
-  const [, setAuthenticated] = useState(isAuthenticated);
   const monkey = useStorage(monkeyStateStorage);
   const hat = HATS.find(h => h.id === monkey.hatId)!;
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newDisplayName, setNewDisplayName] = useState(monkey.user.displayName);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setAuthenticated(isAuthenticated);
-  }, [isAuthenticated]);
+    if (isEditingName) {
+      inputRef.current?.focus();
+    }
+  }, [isEditingName]);
 
-  interface UserData {
-    email: string;
-    name: string;
-  }
-
-  const writeToDatabase = useCallback(async (userData: UserData) => {
+  const writeToDatabase = useCallback(async (userData: User) => {
     const apiUrl = 'http://localhost:3000/api/users/newUser';
     console.log(userData);
     const response = await fetch(apiUrl, {
@@ -39,34 +36,6 @@ const Popup = () => {
       console.log('User data written successfully:', responseData);
     }
   }, []);
-
-  // Effect to write to the database when authenticated
-  useEffect(() => {
-    console.log(isLoading, isAuthenticated, user, 'youasdf af');
-
-    // Check if not loading and authenticated
-    if (!isLoading && isAuthenticated && user && user.email && user.name) {
-      console.log(isLoading, isAuthenticated, user, 'you are stupdi af');
-      writeToDatabase({
-        email: user.email,
-        name: user.name,
-      });
-      monkeyStateStorage.setUser({ id: user.email, displayName: user.name });
-    }
-  }, [isAuthenticated, isLoading, user, writeToDatabase]);
-
-  // const logoutHandler = () => {
-  //   logoutHelper({ federated: true });
-  //   fetch(`https://${process.env.REACT_APP_AUTH0_DOMAIN}/v2/logout?federated=true&client_id=${process.env.REACT_APP_AUTH0_CLIENT_ID}`, {
-  //     credentials: 'include',
-  //     mode: 'no-cors'
-  //   }).catch();
-  // };
-
-  // const logoutHelper = (options) => {
-  //   logout(options);
-  //   setAuthenticated(false);
-  // };
 
   const generateMonkeyText = async () => {
     const [tab] = await chrome.tabs.query({ currentWindow: true, active: true });
@@ -89,37 +58,57 @@ const Popup = () => {
     }
   };
 
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <p className="text-amber-900">Loading...</p>
-      </div>
-    );
-  }
+  const handleUpdateDisplayName = () => {
+    if (newDisplayName.trim()) {
+      monkeyStateStorage.setDisplayName(newDisplayName.trim());
+      setIsEditingName(false);
+    }
+  };
 
-  // Show login if not authenticated
-  if (!isAuthenticated) {
-    return <Login />;
+  if (!monkey.user.id) {
+    const userId = crypto.randomUUID();
+    const user = {
+      id: userId,
+      displayName: `${userId.slice(0, 6)}`,
+    };
+    monkeyStateStorage.setUser(user);
+    writeToDatabase(user);
   }
 
   return (
     <div className={`App`}>
       <header className={`App-header text-amber-950`}>
         <div className="bg-amber-800/5">
-          {user && (
-            <div className="flex w-full items-center gap-1 p-1 text-left text-[10px]">
-              Logged in as
-              <img src={user.picture} alt="Profile" className="inline size-4 rounded-full" />
-              {user.name}.
-              <button className="underline" onClick={() => logout()}>
-                Log Out
-              </button>
-            </div>
-          )}
+          <div className="flex w-full items-center gap-1 p-1 text-left">
+            {isEditingName ? (
+              <div className="flex w-full gap-1">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={newDisplayName}
+                  onChange={e => setNewDisplayName(e.target.value)}
+                  className="flex-1 rounded border border-amber-800/30 bg-amber-50 px-1"
+                  onKeyDown={e => e.key === 'Enter' && handleUpdateDisplayName()}
+                />
+                <button onClick={handleUpdateDisplayName} className="text-amber-800 hover:text-amber-900">
+                  Save
+                </button>
+                <button onClick={() => setIsEditingName(false)} className="text-amber-800 hover:text-amber-900">
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <>
+                <span className="text-sm">{monkey.user.displayName}</span>
+                <button onClick={() => setIsEditingName(true)} className="ml-1 text-amber-800 hover:text-amber-900">
+                  Edit Name
+                </button>
+              </>
+            )}
+          </div>
           <div className="flex flex-col items-center justify-center space-y-2 p-4">
             <div className="relative size-16">
-              <Monkey
+              <MonkeyComponent
                 state={{
                   ...monkey,
                   currentAction: 'idle',
