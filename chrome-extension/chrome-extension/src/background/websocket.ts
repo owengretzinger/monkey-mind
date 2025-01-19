@@ -1,3 +1,4 @@
+import { SERVER_URL } from '@extension/shared';
 import type { WebSocketMessage, ChromeMessage } from '@extension/shared/types/messages';
 
 let ws: WebSocket | null = null;
@@ -10,7 +11,7 @@ export function setupWebSocket() {
   }
 
   console.log('[Background] Attempting WebSocket connection...');
-  ws = new WebSocket('ws://localhost:3000');
+  ws = new WebSocket(SERVER_URL);
 
   ws.onopen = () => {
     console.log('[Background] WebSocket connected successfully');

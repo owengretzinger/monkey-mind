@@ -75,7 +75,7 @@ export const LocalMonkey: React.FC = () => {
           monkeyStateStorage.setPosition(targetPosition);
           if (monkey.currentAction === 'walking') {
             monkeyStateStorage.setAction('talking');
-            generateText(true);
+            generateText();
           } else {
             monkeyStateStorage.setAction('hiding');
           }
