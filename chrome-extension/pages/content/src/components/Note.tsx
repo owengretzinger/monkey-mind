@@ -17,6 +17,7 @@ const formatDate = () => {
 
 interface NoteProps extends NoteType {
   onDelete: () => void;
+  newIDs: Set<string>;
 }
 
 const Note = (props: NoteProps) => {
@@ -28,6 +29,8 @@ const Note = (props: NoteProps) => {
   const [noteTitle, setNoteTitle] = useState(props.title);
   const [noteContent, setNoteContent] = useState(props.content);
   const noteRef = useRef<HTMLDivElement>(null);
+  const newIDs = props.newIDs;
+
 
   const color = props.color;
   const author = props.author;
@@ -95,9 +98,7 @@ const Note = (props: NoteProps) => {
     }
   };
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNoteTitle(e.target.value);
-  };
+
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNoteContent(e.target.value);
@@ -106,79 +107,130 @@ const Note = (props: NoteProps) => {
   // DATA FLOW
   const handleDeletion = async (e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
-    await fetch(`${apiURL}/${props.id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    props.onDelete();
+    try {
+      const response = await fetch(`${apiURL}/${props.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add any auth headers if needed
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to delete note: ${response.statusText}`);
+      }
+  
+    
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      // Optionally add user feedback here
+    }finally{
+      props.onDelete();
+    }
   };
 
   const handleBlur = async () => {
-    console.log('Note content saved:', noteContent);
-    if (noteTitle.trim() !== '') {
-      await fetch(`${apiURL}/${props.id}`, {
+    try {
+      const updateData = {
+        id: props.id,
+        title: noteTitle,
+        content: noteContent,
+        positionX: Math.round(position.x),
+        positionY: Math.round(position.y),
+        color: color,
+        author: author,
+        date: formatDate(),
+        tilt: tiltAngle,
+        profilePic: profilePic,
+        hat: hat,
+        link: window.location.href,
+      };
+  
+      const response = await fetch(`${apiURL}/${props.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          id: props.id,
-          title: noteTitle,
-          content: noteContent,
-          positionX: position.x,
-          positionY: position.y,
-          color: color,
-          author: author,
-          date: formatDate(),
-          tilt: tiltAngle,
-          profilePic: profilePic,
-          hat: hat,
-          link: window.location.href,
-        }),
+        body: JSON.stringify(updateData),
       });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to update note: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error updating note:', error);
     }
   };
 
-  useEffect(() => {
-    const createNote = async () => {
-      if (noteTitle.trim() !== '' && noteTitle.trim().length === 1 && firstTime) {
-        setFirstTime(false);
-        try {
-          const response = await fetch(`${apiURL}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              idSpecial: props.id,
-              title: noteTitle,
-              content: noteContent,
-              positionX: position.x,
-              positionY: position.y,
-              color: color,
-              author: author,
-              date: formatDate(),
-              tilt: tiltAngle,
-              profilePic: profilePic,
-              hat: hat,
-              link: window.location.href,
-            }),
-          });
 
-          if (!response.ok) {
-            throw new Error('Failed to create note');
-          }
-        } catch (error) {
-          console.error('Error creating note:', error);
-        }
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNoteTitle(e.target.value);
+  };
+
+  const handleTitleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      
+      // POST request
+      try {
+        await fetch(`${apiURL}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            idSpecial: props.id,
+            title: noteTitle,
+            content: noteContent,
+            positionX: position.x,
+            positionY: position.y,
+            color: color,
+            author: author,
+            date: formatDate(),
+            tilt: tiltAngle,
+            profilePic: profilePic,
+            hat: hat,
+            link: window.location.href,
+          }),
+        });
+      } catch (error) {
+        console.error('Error creating note:', error);
       }
-    };
 
-    createNote();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [noteTitle]); // Only trigger when noteTitle changes
+      // PUT request
+      try {
+        await fetch(`${apiURL}/${props.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: props.id,
+            title: noteTitle,
+            content: noteContent,
+            positionX: Math.round(position.x),
+            positionY: Math.round(position.y),
+            color: color,
+            author: author,
+            date: formatDate(),
+            tilt: tiltAngle,
+            profilePic: profilePic,
+            hat: hat,
+            link: window.location.href,
+          }),
+        });
+      } catch (error) {
+        console.error('Error updating note:', error);
+      }
+    }
+  };
+
+  const handleContentKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleTitleKeyDown(e as unknown as React.KeyboardEvent<HTMLInputElement>);
+    }
+  };
 
   useEffect(() => {
     if (isDragging) {
@@ -206,21 +258,22 @@ const Note = (props: NoteProps) => {
         left: `${position.x}px`,
         top: `${position.y}px`,
         transform: `rotate(${tiltAngle}deg)`,
-        zIndex: 2147483646,
+        zIndex: 2147483643,
       }}>
       <div style={{ position: 'relative' }}>
-        <button
+      <button
           aria-label="Drag note"
           style={{
             position: 'absolute',
             top: 0,
             left: 0,
-            width: '100%',
-            height: '1.5rem',
+            width: '6rem', // Changed from 100% to 3rem to match profile pic width
+            height: '6rem', // Changed from 1.5rem to 3rem to match profile pic height
             cursor: 'move',
             backgroundColor: 'transparent',
             border: 'none',
             zIndex: 2147483646,
+            //border: '1px solid red',
           }}
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
@@ -325,6 +378,7 @@ const Note = (props: NoteProps) => {
                 type="text"
                 value={noteTitle}
                 onChange={handleTitleChange}
+                onKeyDown={handleTitleKeyDown}
                 placeholder="Untitled Note"
                 aria-label="Note title"
                 style={{
@@ -337,6 +391,8 @@ const Note = (props: NoteProps) => {
                   outline: 'none',
                   border: 'none',
                   color: '#374151', // Adding dark gray color for text
+                  zIndex: 2147483647,
+
                 }}
               />
               <div
@@ -391,8 +447,10 @@ const Note = (props: NoteProps) => {
                 backgroundPosition: '0 2px',
               }}>
               <textarea
+                value={noteContent}
                 onBlur={handleBlur}
                 onChange={handleContentChange}
+                onKeyDown={handleContentKeyDown}
                 placeholder="Type your note here..."
                 aria-label="Note content"
                 style={{

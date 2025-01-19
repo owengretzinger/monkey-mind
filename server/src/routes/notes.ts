@@ -59,6 +59,7 @@ router.post('/', async (req: Request, res: Response) => {
 router.put('/:id', async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
+        console.log(id);
         const { content } = req.body;
         const updatedNote = await Note.findByIdAndUpdate(
             id,

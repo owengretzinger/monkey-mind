@@ -4,147 +4,158 @@ import Note from './components/Note';
 import { monkeyStateStorage } from '@extension/storage';
 
 export const pastelColors = [
-  'bg-yellow-100', // Pastel Yellow
-  'bg-pink-100', // Pastel Pink
-  'bg-blue-100', // Pastel Blue
-  'bg-green-100', // Pastel Green
-  'bg-slate-50', // Pastel White
+    'bg-yellow-100', // Pastel Yellow
+    'bg-pink-100', // Pastel Pink
+    'bg-blue-100', // Pastel Blue
+    'bg-green-100', // Pastel Green
+    'bg-slate-50', // Pastel White
 ];
 
 export interface Note {
-  id: string;
-  color: number;
-  author: string;
-  date: Date;
-  tilt: number;
-  title: string;
-  content: string;
-  positionX: number;
-  positionY: number;
-  hat: string;
-  profilePic: string;
-  link: string;
+    id: string;
+    color: number;
+    author: string;
+    date: Date;
+    tilt: number;
+    title: string;
+    content: string;
+    positionX: number;
+    positionY: number;
+    hat: string;
+    profilePic: string;
+    link: string;
 }
 
-export const defaultNote: Note = {
-  id: Array.from(crypto.getRandomValues(new Uint8Array(9)))
-    .map(b => b.toString(36).padStart(2, '0'))
-    .join('')
-    .slice(0, 12),
-  color: Math.floor(Math.random() * pastelColors.length),
-  author: 'Anonymous',
-  date: new Date(),
-  tilt: 0,
-  title: '',
-  content: '',
-  positionX: Math.random() * (window.innerWidth - 200),
-  positionY: Math.random() * (window.innerHeight - 200),
-  hat: 'none',
-  profilePic: 'default-avatar.png',
-  link: encodeURIComponent(window.location.href),
-};
+
+
 
 const Notes = () => {
-  const [userName, setUserName] = useState<string>('Anonymous');
-  const [userProfilePic, setUserProfilePic] = useState<string>('default.png');
+    const [userName, setUserName] = useState<string>('Anonymous');
+    const [userProfilePic, setUserProfilePic] = useState<string>('default.png');
 
-  const { hatId } = useStorage(monkeyStateStorage);
-  const [allNotes, setAllNotes] = useState<Note[]>([]);
-  const apiURL = SERVER_URL + '/api/notes';
+    const { hatId } = useStorage(monkeyStateStorage);
+    const [allNotes, setAllNotes] = useState<Note[]>([]);
+    const apiURL = SERVER_URL + '/api/notes';
+    const newIDs = new Set<string>([]);
 
-  // Add effect to get user name
-  /*
+    // Add effect to get user name
+    /*
+      useEffect(() => {
+          const getUserInfo = async () => {
+              try {
+                  const result = await chrome.storage.local.get(['userName', 'userProfilePic']);
+                  if (result.userName) {
+                      setUserName(result.userName);
+                  }
+                  if (result.userProfilePic) {
+                      setUserProfilePic(result.userProfilePic);
+                  }
+              } catch (error) {
+                  console.error('Error fetching user info:', error);
+              }
+          };
+  
+          getUserInfo();
+      }, []);
+      */
+
+
+    // Reading from DB for all notes
     useEffect(() => {
-        const getUserInfo = async () => {
+        const fetchNotes = async () => {
             try {
-                const result = await chrome.storage.local.get(['userName', 'userProfilePic']);
-                if (result.userName) {
-                    setUserName(result.userName);
+                const response = await fetch(`${apiURL}/all?url=${encodeURIComponent(window.location.href)}`)
+                if (!response.ok) {
+                    throw new Error('Failed to fetch notes');
                 }
-                if (result.userProfilePic) {
-                    setUserProfilePic(result.userProfilePic);
-                }
+                const data = await response.json();
+                data.id = data._id;
+                console.log(data, "HI THERE STUPID FUC");
+                data.forEach((item: any) => (item.id = item._id))
+                setAllNotes(data);
             } catch (error) {
-                console.error('Error fetching user info:', error);
+                console.error('Error fetching notes:', error);
             }
         };
 
-        getUserInfo();
-    }, []);
-    */
+        fetchNotes();
+    }, [apiURL]);
 
-  // Reading from DB for all notes
-  useEffect(() => {
-    const fetchNotes = async () => {
-      try {
-        const response = await fetch(`${apiURL}/all?url=${encodeURIComponent(window.location.href)}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch notes');
-        }
-        const data = await response.json();
-        data.id = data._id;
-        setAllNotes(data);
-      } catch (error) {
-        console.error('Error fetching notes:', error);
-      }
-    };
+    // Add Chrome Extension Listener For Spawning New Notes
+    useEffect(() => {
+        const messageListener = async (message: { type: string, username: string, id: string }) => {
+            if (message.type === 'ADD_NOTE') {
+                setUserName(message.username);
 
-    fetchNotes();
-  }, [apiURL]);
+                let profilePic = 'default-avatar.png';
+                const response = await fetch(`https://ui-avatars.com/api/?name=${encodeURIComponent(message.username)}`);
+                if (response.ok) {
+                    profilePic = response.url;
+                } else {
+                    console.error('Failed to fetch avatar');
+                }
 
-  // Add Chrome Extension Listener For Spawning New Notes
-  useEffect(() => {
-    const messageListener = async (message: { type: string; username: string; id: string }) => {
-      if (message.type === 'ADD_NOTE') {
-        console.log(message.username, message.id, 'HI THERE STUPID FUC');
-        setUserName(message.username);
+                setUserProfilePic(profilePic);
+                const newID = `${Array.from(crypto.getRandomValues(new Uint8Array(9)))
+                    .map(b => b.toString(36).padStart(2, '0'))
+                    .join('')
+                    .slice(0, 12)}`
 
-        let profilePic = 'default-avatar.png';
-        const response = await fetch(`https://ui-avatars.com/api/?name=${encodeURIComponent(message.username)}`);
-        if (response.ok) {
-          profilePic = response.url;
-        } else {
-          console.error('Failed to fetch avatar');
-        }
+                newIDs.add(newID);
 
-        setUserProfilePic(profilePic);
+                const newNote: Note = {
+                    ...{
+                        id: newID,
+                        color: Math.floor(Math.random() * pastelColors.length),
+                        date: new Date(),
+                        tilt: 0,
+                        title: '',
+                        content: '',
+                        positionX: Math.random() * (window.innerWidth - 200),
+                        positionY: Math.random() * (window.innerHeight - 200),
+                        link: encodeURIComponent(window.location.href)
+                    },
+                    author: message.username,
+                    hat: hatId,
+                    profilePic,
+                };
 
-        const newNote: Note = {
-          ...defaultNote,
-          id: Array.from(crypto.getRandomValues(new Uint8Array(9)))
-            .map(b => b.toString(36).padStart(2, '0'))
-            .join('')
-            .slice(0, 12),
-          author: message.username,
-          hat: hatId,
-          profilePic,
+                console.log(newNote.id);
+                setAllNotes(prev => [...prev, newNote]);
+            }
         };
-        setAllNotes(prev => [...prev, newNote]);
-      }
-    };
 
-    chrome.runtime.onMessage.addListener(messageListener);
-    return () => chrome.runtime.onMessage.removeListener(messageListener);
-  }, [userName, userProfilePic, hatId]); // Add all dependencies
+        chrome.runtime.onMessage.addListener(messageListener);
+        return () => chrome.runtime.onMessage.removeListener(messageListener);
+    }, [userName, userProfilePic, hatId]); // Add all dependencies
 
-  return (
-    <div>
-      {allNotes.map(
-        (
-          note,
-          index, // Changed to use note.id as key
-        ) => (
-          <Note
-            key={index}
-            {...note}
-            onDelete={() => {
-              setAllNotes(prevNotes => prevNotes.filter(n => n.id !== note.id));
-            }}
-          />
-        ),
-      )}
-    </div>
-  );
-};
+    return (
+        <div>
+            {allNotes.map((note, index) => (    // Changed to use note.id as key
+                <Note
+                    key={note.id}
+                    newIDs={newIDs}
+                    {...note}
+                    onDelete={() => {
+                        setAllNotes(prevNotes => prevNotes.filter(n => n.id !== note.id));
+                    }}
+                />
+            ))}
 
-export default Notes;
+        </div>
+    )
+
+
+
+
+
+
+
+
+
+
+}
+
+export default Notes
+
+
