@@ -28,7 +28,7 @@ export function watchRebuildPlugin(config: PluginConfig): PluginOption {
     };
 
     ws.onerror = () => {
-      console.error(`[HMR] Failed to connect server at ${LOCAL_RELOAD_SOCKET_URL}`);
+      console.log(`[HMR] Failed to connect server at ${LOCAL_RELOAD_SOCKET_URL}`);
       console.warn('Retrying in 3 seconds...');
       ws = null;
 
@@ -38,7 +38,7 @@ export function watchRebuildPlugin(config: PluginConfig): PluginOption {
           initializeWebSocket();
         }, 3_000);
       } else {
-        console.error(`[HMR] Cannot establish connection to server at ${LOCAL_RELOAD_SOCKET_URL}`);
+        console.log(`[HMR] Cannot establish connection to server at ${LOCAL_RELOAD_SOCKET_URL}`);
       }
     };
   }

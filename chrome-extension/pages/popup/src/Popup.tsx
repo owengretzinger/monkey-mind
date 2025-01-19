@@ -31,7 +31,7 @@ const Popup = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Error writing to database:', errorData);
+        console.log('Error writing to database:', errorData);
       } else {
         const responseData = await response.json();
         console.log('User data written successfully:', responseData);

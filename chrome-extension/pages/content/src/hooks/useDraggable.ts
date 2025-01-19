@@ -26,7 +26,7 @@ export function useDraggable(initialPosition: Position, storage: MonkeyStorage) 
         await storage.setPosition(newPosition);
         await storage.setAction('dragging');
       } catch (error) {
-        console.error('Error during drag:', error);
+        console.log('Error during drag:', error);
         cleanup();
       }
     };
@@ -35,7 +35,7 @@ export function useDraggable(initialPosition: Position, storage: MonkeyStorage) 
       try {
         cleanup();
       } catch (error) {
-        console.error('Error during mouse up:', error);
+        console.log('Error during mouse up:', error);
         storage.setAction('idle');
       }
     };
@@ -44,7 +44,7 @@ export function useDraggable(initialPosition: Position, storage: MonkeyStorage) 
       try {
         cleanup();
       } catch (error) {
-        console.error('Error during mouse leave:', error);
+        console.log('Error during mouse leave:', error);
         storage.setAction('idle');
       }
     };
@@ -54,7 +54,7 @@ export function useDraggable(initialPosition: Position, storage: MonkeyStorage) 
         try {
           cleanup();
         } catch (error) {
-          console.error('Error during mouse out:', error);
+          console.log('Error during mouse out:', error);
           storage.setAction('idle');
         }
       }

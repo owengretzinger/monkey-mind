@@ -51,7 +51,7 @@ const Notes = () => {
                       setUserProfilePic(result.userProfilePic);
                   }
               } catch (error) {
-                  console.error('Error fetching user info:', error);
+                  console.log('Error fetching user info:', error);
               }
           };
   
@@ -74,7 +74,7 @@ const Notes = () => {
                 data.forEach((item: any) => (item.id = item._id))
                 setAllNotes(data);
             } catch (error) {
-                console.error('Error fetching notes:', error);
+                console.log('Error fetching notes:', error);
             }
         };
 
@@ -92,7 +92,7 @@ const Notes = () => {
                 if (response.ok) {
                     profilePic = response.url;
                 } else {
-                    console.error('Failed to fetch avatar');
+                    console.log('Failed to fetch avatar');
                 }
 
                 setUserProfilePic(profilePic);

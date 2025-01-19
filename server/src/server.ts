@@ -72,7 +72,7 @@ wss.on("connection", (ws: WebSocket) => {
         }
       }
     } catch (error) {
-      console.error("Invalid message received:", error);
+      console.log("Invalid message received:", error);
     }
   });
 
@@ -106,7 +106,7 @@ app.get("/", (req: Request, res: Response) => {
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
+  console.log(err.stack);
   res.status(500).send("Something broke!");
 });
 

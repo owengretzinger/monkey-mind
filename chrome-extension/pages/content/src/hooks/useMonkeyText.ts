@@ -16,7 +16,7 @@ export function useMonkeyText(selectedHat: string) {
     const pageContent = document.body.innerText;
     const currentHat = HATS.find(h => h.id === selectedHat);
     if (!currentHat) {
-      console.error('No hat found for selectedHat:', selectedHat);
+      console.log('No hat found for selectedHat:', selectedHat);
       return;
     }
 
@@ -45,7 +45,7 @@ export function useMonkeyText(selectedHat: string) {
         setSpeechText('');
       }, 10000);
     } catch (error) {
-      console.error('Error generating text:', error);
+      console.log('Error generating text:', error);
       monkeyStateStorage.setAction('idle');
     }
   }, [selectedHat]);

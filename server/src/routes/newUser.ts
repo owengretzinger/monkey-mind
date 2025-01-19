@@ -28,7 +28,7 @@ router.post("/newUser", async (req, res) => {
         .json({ message: "User created successfully", user: newUser });
     }
   } catch (error) {
-    console.error("Detailed error:", {
+    console.log("Detailed error:", {
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : "No stack trace",
       name: error instanceof Error ? error.name : "Unknown Error",

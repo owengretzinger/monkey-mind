@@ -46,7 +46,7 @@ router.post('/', async (req: Request, res: Response) => {
         const savedNote = await note.save();
         res.status(201).json(savedNote);
     } catch (error) {
-        console.error('Error creating note:', error);
+        console.log('Error creating note:', error);
         res.status(500).json({ 
             error: 'Error creating note',
             details: error instanceof Error ? error.message : String(error)

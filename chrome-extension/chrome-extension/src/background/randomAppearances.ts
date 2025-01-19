@@ -14,7 +14,7 @@ export async function triggerMonkey(tabId: number) {
 
     await chrome.tabs.sendMessage(tabId, { type: 'COME_HERE' });
   } catch (error) {
-    console.error('Error triggering monkey:', error);
+    console.log('Error triggering monkey:', error);
   }
 }
 

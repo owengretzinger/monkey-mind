@@ -122,7 +122,7 @@ const Note = (props: NoteProps) => {
   
     
     } catch (error) {
-      console.error('Error deleting note:', error);
+      console.log('Error deleting note:', error);
       // Optionally add user feedback here
     }finally{
       props.onDelete();
@@ -158,7 +158,7 @@ const Note = (props: NoteProps) => {
         throw new Error(`Failed to update note: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Error updating note:', error);
+      console.log('Error updating note:', error);
     }
   };
 
@@ -194,7 +194,7 @@ const Note = (props: NoteProps) => {
           }),
         });
       } catch (error) {
-        console.error('Error creating note:', error);
+        console.log('Error creating note:', error);
       }
 
       // PUT request
@@ -220,7 +220,7 @@ const Note = (props: NoteProps) => {
           }),
         });
       } catch (error) {
-        console.error('Error updating note:', error);
+        console.log('Error updating note:', error);
       }
     }
   };
@@ -467,6 +467,7 @@ const Note = (props: NoteProps) => {
                   WebkitMask: 'linear-gradient(transparent, black 10px)',
                   overflowY: 'auto',
                   border: 'none',
+                  color: '#374151', // Adding dark gray color for text
                 }}
               />
             </div>

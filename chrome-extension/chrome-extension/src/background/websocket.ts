@@ -23,18 +23,18 @@ export function setupWebSocket() {
   };
 
   ws.onmessage = event => {
-    console.log('[Background] Received message:', event.data);
     // Broadcast to all content scripts
     chrome.tabs.query({}, tabs => {
-      console.log('[Background] Broadcasting to', tabs.length, 'tabs');
       tabs.forEach(tab => {
         if (tab.id) {
-          chrome.tabs.sendMessage(tab.id, {
-            type: 'WS_MESSAGE',
-            data: JSON.parse(event.data) as WebSocketMessage,
-          } as ChromeMessage).catch(err => {
-            console.log('[Background] Failed to send to tab', tab.id, ':', err);
-          });
+          chrome.tabs
+            .sendMessage(tab.id, {
+              type: 'WS_MESSAGE',
+              data: JSON.parse(event.data) as WebSocketMessage,
+            } as ChromeMessage)
+            .catch(err => {
+              console.log('[Background] Failed to send to tab', tab.id, ':', err);
+            });
         }
       });
     });
@@ -49,14 +49,13 @@ export function setupWebSocket() {
     }, 2000);
   };
 
-  ws.onerror = (error) => {
-    console.error('[Background] WebSocket error:', error);
+  ws.onerror = error => {
+    console.log('[Background] WebSocket error:', error);
   };
 }
 
 export function sendWebSocketMessage(data: WebSocketMessage) {
   if (ws?.readyState === WebSocket.OPEN) {
-    console.log('[Background] Sending message:', data);
     lastSentState = data;
     ws.send(JSON.stringify(data));
   } else {
@@ -67,7 +66,6 @@ export function sendWebSocketMessage(data: WebSocketMessage) {
 // Listen for messages from content scripts
 chrome.runtime.onMessage.addListener((message: ChromeMessage) => {
   if (message.type === 'WS_SEND') {
-    console.log('[Background] Received message from content script:', message);
     sendWebSocketMessage(message.data);
   }
 });

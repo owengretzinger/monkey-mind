@@ -37,7 +37,7 @@ function initReloadServer() {
   });
 
   wss.on('error', error => {
-    console.error(`[HMR] Failed to start server at ${LOCAL_RELOAD_SOCKET_URL}`);
+    console.log(`[HMR] Failed to start server at ${LOCAL_RELOAD_SOCKET_URL}`);
     throw error;
   });
 }

@@ -94,7 +94,7 @@ async function categorizePage(
 
       return aiCategories || ["UNKNOWN"];
     } catch (error) {
-      console.error("Error in AI categorization:", error);
+      console.log("Error in AI categorization:", error);
       return ["UNKNOWN"];
     }
   }
@@ -167,7 +167,7 @@ router.post("/cheer", async (req: Request, res: Response) => {
     const cheerMessage = completion.choices[0].message.content;
     res.json({ message: cheerMessage });
   } catch (error) {
-    console.error("Error generating cheer:", error);
+    console.log("Error generating cheer:", error);
     res.status(500).json({ error: "Error generating mascot response" });
   }
 });
@@ -247,7 +247,7 @@ router.post("/pageswitch", async (req: Request, res: Response) => {
       transition: transition,
     });
   } catch (error) {
-    console.error("Error generating page switch response:", error);
+    console.log("Error generating page switch response:", error);
     res.status(500).json({ error: "Error generating mascot response" });
   }
 });
@@ -311,7 +311,7 @@ router.post("/switch", async (req: Request, res: Response) => {
     const switchMessage = completion.choices[0].message.content;
     res.json({ message: switchMessage });
   } catch (error) {
-    console.error("Error generating switch response:", error);
+    console.log("Error generating switch response:", error);
     res.status(500).json({ error: "Error generating mascot response" });
   }
 });
