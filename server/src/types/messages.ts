@@ -12,7 +12,10 @@ export interface MonkeyPosition {
         y: number;
     };
     state: string;
+    direction?: 'left' | 'right';
     url: string;
+    ownerName: string;
+    selectedHat?: string;
 }
 
 export interface WebSocketMessage {

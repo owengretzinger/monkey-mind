@@ -10,6 +10,15 @@ const NewTab = () => {
     await monkeyPreferencesStorage.set({ ...current, [key]: value });
   };
 
+  const fetchData = async () => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/history`);
+        // ... rest of the function
+    } catch (error) {
+        // ... error handling
+    }
+  };
+
   return (
     <div className="App bg-slate-50 p-8 text-gray-900">
       <h1 className="mb-6 text-2xl font-bold">Monkey Settings</h1>

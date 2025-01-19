@@ -43,14 +43,15 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Hello World!');
 });
 
-// Add a map to track monkeys by URL
+// Update the monkeys tracking structure
 const monkeysByUrl = new Map<string, Map<string, MonkeyPosition>>();
+const activeConnections = new Map<string, ExtendedWebSocket>();
 
 // Update WebSocket connection handler
 wss.on('connection', (ws: ExtendedWebSocket) => {
     console.log('New client connected');
     let currentUrl: string | null = null;
-    let clientId: string | null = null;
+    let userId: string | null = null;
     let userPresence: UserPresence | null = null;
 
     // Set up heartbeat
@@ -69,7 +70,6 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
         ws.ping();
     }, 30000);
 
-    // Handle incoming messages
     ws.on('message', (data: Buffer | ArrayBuffer | Buffer[]) => {
         try {
             const message: WebSocketMessage = JSON.parse(data.toString());
@@ -78,7 +78,18 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
                 case 'monkey_position':
                     const monkeyData = message.data as MonkeyPosition;
                     const { url, id } = monkeyData;
-                    clientId = id;
+                    console.log('Server received monkey data:', monkeyData);
+                    
+                    // If this is a new connection for this user, clean up old connection
+                    if (activeConnections.has(id) && activeConnections.get(id) !== ws) {
+                        const oldWs = activeConnections.get(id);
+                        if (oldWs?.readyState === WebSocket.OPEN) {
+                            oldWs.close();
+                        }
+                    }
+                    
+                    userId = id;
+                    activeConnections.set(id, ws);
 
                     // Remove monkey from old URL if it changed
                     if (currentUrl && currentUrl !== url) {
@@ -98,13 +109,18 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
                     monkeysByUrl.get(url)!.set(id, monkeyData);
                     currentUrl = url;
 
-                    // Only broadcast to clients on the same URL
+                    // Only broadcast to other clients on the same URL
+                    const urlMonkeys = monkeysByUrl.get(url);
                     wss.clients.forEach(client => {
                         if (client !== ws && client.readyState === WebSocket.OPEN) {
-                            client.send(JSON.stringify({
-                                type: 'monkey_position',
-                                data: monkeyData
-                            }));
+                            // Send the current state of all monkeys on this URL
+                            urlMonkeys?.forEach(monkey => {
+                                console.log('Server sending monkey data:', monkey);
+                                client.send(JSON.stringify({
+                                    type: 'monkey_position',
+                                    data: monkey
+                                }));
+                            });
                         }
                     });
                     break;
@@ -145,20 +161,22 @@ wss.on('connection', (ws: ExtendedWebSocket) => {
 
     // Handle client disconnection
     ws.on('close', () => {
-        if (currentUrl && clientId) {
+        if (currentUrl && userId) {
             const urlMonkeys = monkeysByUrl.get(currentUrl);
             if (urlMonkeys) {
-                urlMonkeys.delete(clientId);
+                urlMonkeys.delete(userId);
                 if (urlMonkeys.size === 0) {
                     monkeysByUrl.delete(currentUrl);
                 }
+                
+                activeConnections.delete(userId);
                 
                 // Notify other clients that this monkey left
                 wss.clients.forEach(client => {
                     if (client !== ws && client.readyState === WebSocket.OPEN) {
                         client.send(JSON.stringify({
                             type: 'monkey_left',
-                            data: { id: clientId }
+                            data: { id: userId }
                         }));
                     }
                 });
