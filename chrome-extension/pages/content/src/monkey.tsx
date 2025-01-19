@@ -134,29 +134,31 @@ export default function Monkey() {
   // Add WebSocket connection and position tracking
   useEffect(() => {
     const ws = new WebSocket(WS_URL);
-    
+
     ws.onopen = () => {
       console.log('WebSocket Connected');
       // Send initial presence with a unique ID
       const clientId = Math.random().toString(36).substring(7);
-      ws.send(JSON.stringify({
-        type: 'monkey_position',
-        data: {
-          id: clientId,
-          position: storedData.position,
-          state: storedData.state,
-          url: window.location.href
-        }
-      }));
+      ws.send(
+        JSON.stringify({
+          type: 'monkey_position',
+          data: {
+            id: clientId,
+            position: storedData.position,
+            state: storedData.state,
+            url: window.location.href,
+          },
+        }),
+      );
     };
 
-    ws.onmessage = (event) => {
+    ws.onmessage = event => {
       const message = JSON.parse(event.data);
       if (message.type === 'monkey_position') {
         const { id, position, state } = message.data;
         setOtherMonkeys(prev => ({
           ...prev,
-          [id]: { position, state }
+          [id]: { position, state },
         }));
       } else if (message.type === 'monkey_left') {
         const { id } = message.data;
@@ -171,14 +173,16 @@ export default function Monkey() {
     // Function to send position updates
     const sendPositionUpdate = () => {
       if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-          type: 'monkey_position',
-          data: {
-            position: storedData.position,
-            state: storedData.state,
-            url: window.location.href
-          }
-        }));
+        ws.send(
+          JSON.stringify({
+            type: 'monkey_position',
+            data: {
+              position: storedData.position,
+              state: storedData.state,
+              url: window.location.href,
+            },
+          }),
+        );
       }
     };
 
@@ -240,11 +244,11 @@ export default function Monkey() {
         }
         onDragStart={e => e.preventDefault()}>
         {(speechText || storedData.state === 'thinking') && (
-          <SpeechBubble 
-          text={speechText} 
-          isThinking={storedData.state === 'thinking'} 
-          isOnRightSide={storedData.position.x > window.innerWidth / 2}
-        />
+          <SpeechBubble
+            text={speechText}
+            isThinking={storedData.state === 'thinking'}
+            isOnRightSide={storedData.position.x > window.innerWidth / 2}
+          />
         )}
         <MonkeyVisual
           selectedHat={selectedHat}
@@ -256,6 +260,7 @@ export default function Monkey() {
               : 'left'
           }
           state={storedData.state}
+          color={storedData.color}
         />
         {/* <div className="pt-4">{storedData.state}</div> */}
       </div>
