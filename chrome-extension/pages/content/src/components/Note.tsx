@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Note as NoteType, pastelColors, } from '../notes';
-
+import { useAuth0 } from '@src/auth/Auth0Provider';
 
 const tiltAngles = [-2, -1, 0, 1, 2]
 
@@ -14,7 +14,13 @@ const formatDate = () => {
     });
   };
   
-const Note = (props: NoteType) => {
+
+interface NoteProps extends NoteType {
+    onDelete: () => void;
+}
+
+const Note = (props: NoteProps) => {
+  const { user } = useAuth0();
   const [position, setPosition] = useState({ x: props.positionX, y: props.positionY });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -23,9 +29,9 @@ const Note = (props: NoteType) => {
   const noteRef = useRef<HTMLDivElement>(null);
 
   const color = props.color;
-  const author = props.author;
+  const author = user?.email || "ll";
   const date = props.date;
-  const profilePic = props.profilePic;
+  const profilePic = user?.picture || props.profilePic;
   const hat = props.hat;
 
   const colorIndex = color % pastelColors.length;
@@ -60,6 +66,27 @@ const Note = (props: NoteType) => {
     setNoteTitle(e.target.value);
   };
 
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNoteContent(e.target.value);
+  };
+
+  const handleDeletion = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent dragging when clicking delete
+    props.onDelete(); // Call the onDelete function passed from parent
+  }
+
+
+  const handleBlur = () => {
+    console.log('Note content saved:', noteContent);
+    // Here you would typically save the note content to your backend/storage
+    // For example:
+    // saveNote({ ...props, content: noteContent });
+  };
+
+
+
+
+
   useEffect(() => {
     if (isDragging) {
       window.addEventListener('mousemove', handleMouseMove);
@@ -71,6 +98,11 @@ const Note = (props: NoteType) => {
     };
   }, [isDragging, dragOffset]);
 
+  useEffect(() => {  console.log(user)
+  }, [])
+
+
+
   return (
     <div
       ref={noteRef}
@@ -80,13 +112,15 @@ const Note = (props: NoteType) => {
         boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
         left: `${position.x}px`,
         top: `${position.y}px`,
-        transform: `rotate(${tiltAngle}deg)`
+        transform: `rotate(${tiltAngle}deg)`,
+        zIndex: 2147483646,
+        outline: 'none'
       }}
       onMouseDown={handleMouseDown}
     >
       <div style={{
-        width: '14rem',
-        height: '14rem',
+        width: '12rem',
+        height: '12rem',
         padding: '0.5rem',
         borderRadius: '1px',
         boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
@@ -97,11 +131,31 @@ const Note = (props: NoteType) => {
                        bgColor === 'bg-green-100' ? '#dcfce7' :
                        '#f8fafc'
       }}>
+        <button
+          style={{
+            position: 'absolute',
+            top: '6px',
+            right: '6px',
+            width: '2px',
+            height: '2px',
+            borderRadius: '50%',
+            backgroundColor: '#ef4444',
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            zIndex: 2147483647,
+            padding: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          onClick={handleDeletion}
+        />
+          
         <div style={{
           display: 'flex',
           alignItems: 'flex-start',
           justifyContent: 'center',
-          border: '2px solid rgb(252 165 165)',
           gap: '0.5rem',
           marginBottom: '0.5rem'
         }}>
@@ -133,13 +187,15 @@ const Note = (props: NoteType) => {
               type="text"
               value={noteTitle}
               onChange={handleTitleChange}
+              placeholder="Untitled Note"
               style={{
                 width: '100%',
                 backgroundColor: 'transparent',
                 fontWeight: '500',
                 fontSize: '0.875rem',
                 lineHeight: '1rem',
-                outline: 'none'
+                outline: 'none',
+                border: 'none',
               }}
             />
             <div style={{
@@ -175,7 +231,7 @@ const Note = (props: NoteType) => {
           position: 'relative'
         }}>
           <div style={{
-            width: '100%',
+            width: '90%',
             height: '100%',
             padding: '0 0.5rem',
             backgroundImage: `
@@ -189,6 +245,8 @@ const Note = (props: NoteType) => {
             backgroundPosition: '0 2px'
           }}>
             <textarea
+              onBlur={handleBlur}
+              onChange={handleContentChange}
               placeholder="Type your note here..."
               style={{
                 width: '100%',
@@ -196,17 +254,21 @@ const Note = (props: NoteType) => {
                 backgroundColor: 'transparent',
                 resize: 'none',
                 outline: 'none',
-                fontSize: '0.875rem',
+                fontSize: '0.5rem',
                 lineHeight: '21px',
                 paddingTop: '2px',
                 paddingLeft: '0.25rem',
                 paddingRight: '0.25rem',
                 WebkitMask: 'linear-gradient(transparent, black 10px)',
-                overflowY: 'auto'
+                overflowY: 'auto',
+                border:'none'
               }}
             />
           </div>
         </div>
+     
+     
+     
       </div>
     </div>
   );
