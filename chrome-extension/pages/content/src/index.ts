@@ -1,25 +1,22 @@
-import { toggleTheme } from '@src/toggleTheme';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import Monkey from './monkey';
 import Notes from './notes';
 
-
 console.log('content script loaded');
 
-void toggleTheme();
-
-// Create container for React
-const container = document.createElement('div');
-document.body.appendChild(container);
+// Create container for Monkey
+const containerMonkey = document.createElement('div');
+document.body.appendChild(containerMonkey);
 
 // Create React root and render Monkey
-const root = createRoot(container);
-root.render(React.createElement(Monkey));
+const rootMonkey = createRoot(containerMonkey);
+rootMonkey.render(React.createElement(Monkey));
 
+// Create container for Notes
+const containerNotes = document.createElement('div');
+document.body.appendChild(containerNotes);
 
-// Create container for React
-const containerNote = document.createElement('div');
-document.body.appendChild(containerNote);
-
-root.render(React.createElement(Notes));
+// Create React root and render Notes
+const rootNotes = createRoot(containerNotes);
+rootNotes.render(React.createElement(Notes));
