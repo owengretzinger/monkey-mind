@@ -12,7 +12,7 @@ export const MonkeyComponent = ({ state }: MonkeyVisualProps) => {
   const hat = HATS.find(hat => hat.id === hatId);
 
   useEffect(() => {
-    if (state.position.x !== prevPosition.x) {
+    if (Math.abs(state.position.x - prevPosition.x) > 0.5) {
       setDirection(state.position.x > prevPosition.x ? 'right' : 'left');
       setPrevPosition(state.position);
     }
