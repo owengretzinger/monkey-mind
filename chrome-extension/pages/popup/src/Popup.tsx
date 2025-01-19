@@ -90,6 +90,13 @@ const Popup = () => {
     }
   };
 
+  const leaveNote = async () => {
+    const [tab] = await chrome.tabs.query({ currentWindow: true, active: true });
+    if (tab.id) {
+      chrome.tabs.sendMessage(tab.id, { type: 'ADD_NOTE' });
+    }
+  }
+
   // Show loading state
   if (isLoading) {
     return (
@@ -105,12 +112,6 @@ const Popup = () => {
   }
 
 
-  const leaveNote = async () => {
-    const [tab] = await chrome.tabs.query({ currentWindow: true, active: true });
-    if (tab.id) {
-      chrome.tabs.sendMessage(tab.id, { type: 'ADD_NOTE' });
-    }
-  }
 
   return (
     <div className={`App bg-slate-50`}>

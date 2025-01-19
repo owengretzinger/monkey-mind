@@ -14,7 +14,7 @@ export enum HatType {
 export interface INote extends Document {
   color: number;
   tilt: number
-  author: string;
+  author: mongoose.Types.ObjectId;
   date: Date;
   title: string;
   content: string;
@@ -29,6 +29,7 @@ const NoteSchema = new Schema({
   color: { type: Number, required: true },
   tilt: { type: Number, required: true},
   author: { type: String, required: true },
+  authorID: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   date: { type: Date, default: Date.now },
   title: { type: String, required: true },
   content: { type: String, default: '' },

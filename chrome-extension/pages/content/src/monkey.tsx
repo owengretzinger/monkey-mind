@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+
 import { useStorage } from '@extension/shared';
 import { monkeyStateStorage, hatStorage } from '@extension/storage';
 import { OtherMonkeys } from './components/OtherMonkeys';

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Note as NoteType, pastelColors, } from '../monkey';
+import { Note as NoteType, pastelColors, } from '../notes';
 
 
 const tiltAngles = [-2, -1, 0, 1, 2]
@@ -211,3 +211,5 @@ const Note = (props: NoteType) => {
     </div>
   );
 };
+
+export default Note;
