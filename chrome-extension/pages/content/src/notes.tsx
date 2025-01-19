@@ -29,23 +29,7 @@ export interface Note {
 }
 
 
-export const defaultNote: Note = {
-    id: Array.from(crypto.getRandomValues(new Uint8Array(9)))
-        .map(b => b.toString(36).padStart(2, '0'))
-        .join('')
-        .slice(0, 12),
-    color: Math.floor(Math.random() * pastelColors.length),
-    author: 'Anonymous',
-    date: new Date(),
-    tilt: 0,
-    title: '',
-    content: '',
-    positionX: Math.random() * (window.innerWidth - 200),
-    positionY: Math.random() * (window.innerHeight - 200),
-    hat: "none",
-    profilePic: 'default-avatar.png',
-    link: encodeURIComponent(window.location.href)
-};
+
 
 
 const Notes = () => {
@@ -55,7 +39,7 @@ const Notes = () => {
     const {hatId} = useStorage(monkeyStateStorage);
     const [allNotes, setAllNotes] = useState<Note[]>([]);
     const apiURL = 'http://localhost:3000/api/notes';
-
+    const newIDs = new Set<string>([]);
 
     // Add effect to get user name
     /*
@@ -89,6 +73,8 @@ const Notes = () => {
                 }
                 const data = await response.json();
                 data.id = data._id;
+                console.log(data, "HI THERE STUPID FUC");
+                data.forEach((item:any) => (item.id=item._id))
                 setAllNotes(data);
             } catch (error) {
                 console.error('Error fetching notes:', error);
@@ -103,9 +89,7 @@ const Notes = () => {
     useEffect(() => {
         const messageListener = async (message: { type: string, username: string, id: string }) => {
             if (message.type === 'ADD_NOTE') {
-                console.log(message.username, message.id, "HI THERE STUPID FUC");
                 setUserName(message.username);
-
 
                 let profilePic = 'default-avatar.png';
                 const response = await fetch(`https://ui-avatars.com/api/?name=${encodeURIComponent(message.username)}`);
@@ -116,19 +100,32 @@ const Notes = () => {
                 }
 
                 setUserProfilePic(profilePic);
+                const newID = `${Array.from(crypto.getRandomValues(new Uint8Array(9)))
+                            .map(b => b.toString(36).padStart(2, '0'))
+                            .join('')
+                            .slice(0, 12)}`
+
+                newIDs.add(newID);
 
                 const newNote: Note = {
-                    ...defaultNote,
-                    id: Array.from(crypto.getRandomValues(new Uint8Array(9)))
-                    .map(b => b.toString(36).padStart(2, '0'))
-                    .join('')
-                    .slice(0, 12),
+                    ...{
+                        id: newID,
+                        color: Math.floor(Math.random() * pastelColors.length),
+                        date: new Date(),
+                        tilt: 0,
+                        title: '',
+                        content: '',
+                        positionX: Math.random() * (window.innerWidth - 200),
+                        positionY: Math.random() * (window.innerHeight - 200),
+                        link: encodeURIComponent(window.location.href)
+                    },
                     author: message.username,
                     hat: hatId,
                     profilePic,
                 };
-                setAllNotes(prev => [...prev, newNote]);
 
+                console.log(newNote.id);
+                setAllNotes(prev => [...prev, newNote]);
             }
         };
 
@@ -141,7 +138,8 @@ const Notes = () => {
         <div>
              {allNotes.map((note, index) => (    // Changed to use note.id as key
             <Note 
-                key={index} 
+                key={note.id} 
+                newIDs={newIDs}
                 {...note} 
                 onDelete={() => {
                     setAllNotes(prevNotes => prevNotes.filter(n => n.id !== note.id));
