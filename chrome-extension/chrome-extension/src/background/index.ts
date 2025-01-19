@@ -38,6 +38,10 @@ async function scheduleNext() {
 // Start the scheduling loop
 scheduleNext();
 
+
+
+
+
 // Handle tab activation
 chrome.tabs.onActivated.addListener(async ({ tabId }) => {
   const prefs = await monkeyPreferencesStorage.get();

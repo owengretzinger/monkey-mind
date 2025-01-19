@@ -1,18 +1,68 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useStorage, MonkeyVisual } from '@extension/shared';
 import { monkeyStateStorage, hatStorage } from '@extension/storage';
 import { SpeechBubble } from './components/SpeechBubble';
 import { useDraggable } from './hooks/useDraggable';
 import { useMonkeyText } from './hooks/useMonkeyText';
+import { useAuth0 } from '@auth0/auth0-react';
+
 
 const SPEED = 150; // pixels per second
 const WALKING_TIME = 5000; // milliseconds
 
+export const pastelColors = [
+  'bg-yellow-100',  // Pastel Yellow
+  'bg-pink-100',    // Pastel Pink
+  'bg-blue-100',    // Pastel Blue
+  'bg-green-100',   // Pastel Green
+  'bg-slate-50'     // Pastel White
+];
+
+export enum HatType {
+  None = 'none',
+  Banana = 'banana',
+  Girlfriend = 'girlfriend',
+  Grad = 'grad',
+  Wizard = 'wizard',
+  Tinfoil = 'tinfoil',
+  Military = 'military'
+}
+
+export interface Note {
+  color: number;
+  author: string;
+  date: Date;
+  tilt: number;
+  title: string;
+  content: string;
+  positionX: number;
+  positionY: number;
+  hat: HatType;
+  profilePic: string;
+}
+
+
+export const defaultNote: Note = {
+  color: Math.floor(Math.random() * pastelColors.length),
+  author: 'Anonymous',
+  date: new Date(),
+  tilt: 0,
+  title: 'Untitled Note',
+  content: '',
+  positionX: Math.random() * (window.innerWidth - 200),
+  positionY: Math.random() * (window.innerHeight - 200),
+  hat: HatType.None,
+  profilePic: 'default-avatar.png'
+};
+
+
 export default function Monkey() {
+  const { user, isAuthenticated, loginWithRedirect } = useAuth0();
   const storedData = useStorage(monkeyStateStorage);
   const { handleMouseDown } = useDraggable(storedData.position, monkeyStateStorage);
   const selectedHat = useStorage(hatStorage);
   const { speechText, generateText } = useMonkeyText(selectedHat);
+  const [allNotes, setAllNotes] = useState<Note[]>([]); // Explicitly type the state array
 
   const getTargetPosition = () => {
     const startPosition = storedData.position;
@@ -99,7 +149,22 @@ export default function Monkey() {
   }, [generateText, storedData.state, storedData.position, targetPosition]);
 
   useEffect(() => {
-    const messageListener = async (message: { type: string }) => {
+    // Pulling All of the Existing Notes
+    /*
+    const renderAllNotes = async () => {
+      const note = await fetch()
+      setAllNotes([note]); // database call to mongo lmao
+    }
+
+    renderAllNotes();
+    */
+   console.log("HIIIIIIadsl;kfj;laksdjfklsajd;fkl")
+    
+    const messageListener = async (
+      message: { type: string }, 
+      sender: chrome.runtime.MessageSender, 
+      sendResponse: (response: any) => void
+    ) => {
       if (message.type === 'COME_HERE') {
         const topQuarter = window.scrollY + window.innerHeight * 0.25;
         const bottomQuarter = window.scrollY + window.innerHeight * 0.75;
@@ -120,7 +185,23 @@ export default function Monkey() {
         await monkeyStateStorage.setPosition(newPosition);
 
         monkeyStateStorage.setState('walking');
+
+      }else if (message.type === "ADD_NOTE") {
+        console.log("HIIII");
+
+
+        const newNote: Note = {
+          ...defaultNote,
+          author: "",
+          date: new Date(),
+          positionX: Math.random() * (window.innerWidth - 200),
+          positionY: Math.random() * (window.innerHeight - 200),
+        };
+        
+        setAllNotes(prev => [...prev, newNote]);
+        sendResponse({ success: true });
       }
+      return true;
     };
 
     chrome.runtime.onMessage.addListener(messageListener);
@@ -141,6 +222,8 @@ export default function Monkey() {
       }}
       draggable={false}
       onDragStart={e => e.preventDefault()}>
+
+
       <div
         role="button"
         tabIndex={0}
@@ -184,7 +267,19 @@ export default function Monkey() {
           }
           state={storedData.state}
         />
+
+
         {/* <div className="pt-4">{storedData.state}</div> */}
+      </div>
+
+      <div>
+        {allNotes.map((index, note) => {
+            return (
+              <div>
+                
+              </div>
+            )
+          })}
       </div>
     </div>
   );

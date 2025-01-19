@@ -96,6 +96,14 @@ const Popup = () => {
     }
   };
 
+
+  const leaveNote = async () => {
+    const [tab] = await chrome.tabs.query({ currentWindow: true, active: true });
+    if (tab.id) {
+      chrome.tabs.sendMessage(tab.id, { type: 'ADD_NOTE' });
+    }
+  }
+
   return (
     <div className={`App bg-slate-50`}>
       <header className={`App-header text-amber-950`}>
@@ -144,6 +152,9 @@ const Popup = () => {
             </button>
             <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={callMonkey}>
               Come Here!
+            </button>
+            <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={leaveNote}>
+              Leave A Note
             </button>
             <button className="rounded-xl bg-amber-900/15 px-2 py-1" onClick={() => logout()}>
               Log Out

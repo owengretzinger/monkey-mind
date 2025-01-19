@@ -1,19 +1,46 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+
+export enum HatType {
+  None = 'none',
+  Banana = 'banana',
+  Girlfriend = 'girlfriend',
+  Grad = 'grad',
+  Wizard = 'wizard',
+  Tinfoil = 'tinfoil',
+  Military = 'military'
+}
+// Interface for the document
 export interface INote extends Document {
-  url: string;
+  color: number;
+  tilt: number
+  author: string;
+  date: Date;
+  title: string;
   content: string;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
+  positionX: number;
+  positionY: number;
+  hat: HatType;
+  profilePic: string;
 }
 
-const NoteSchema: Schema = new Schema({
-  url: { type: String, required: true },
-  content: { type: String, required: true },
-  userId: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+// Schema definition
+const NoteSchema = new Schema({
+  color: { type: Number, required: true },
+  tilt: { type: Number, required: true},
+  author: { type: String, required: true },
+  date: { type: Date, default: Date.now },
+  title: { type: String, required: true },
+  content: { type: String, default: '' },
+  positionX: { type: Number, required: true },
+  positionY: { type: Number, required: true },
+  hat: { 
+    type: String, 
+    enum: Object.values(HatType),
+    default: HatType.None 
+  },
+  profilePic: { type: String, required: true }
 });
 
+// Export the model
 export default mongoose.model<INote>('Note', NoteSchema);
