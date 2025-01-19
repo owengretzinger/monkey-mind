@@ -170,13 +170,10 @@ const Popup = () => {
               <button
                 key={hat.id}
                 title={`${hat.name}: ${hat.description_for_user}`}
-                className={`size-8 rounded-xl bg-amber-900/15 ${selectedHat === hat.id && 'ring-2 ring-amber-800'}`}
-                style={{
-                  backgroundImage: `url(${chrome.runtime.getURL(`hats/${hat.id}.PNG`)})`,
-                  backgroundSize: '150%',
-                  backgroundPosition: 'top 0 right 10%',
-                }}
-                onClick={() => hatStorage.setHat(hat.id)}></button>
+                className={`size-8 rounded-xl bg-amber-900/15 p-0.5 ${selectedHat === hat.id && 'ring-2 ring-amber-800'}`}
+                onClick={() => hatStorage.setHat(hat.id)}>
+                <img src={chrome.runtime.getURL(`hats/icons/${hat.id}.PNG`)} alt={hat.name} className="" />
+              </button>
             ))}
           </div>
 
