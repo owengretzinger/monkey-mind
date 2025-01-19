@@ -149,7 +149,9 @@ export default function Monkey() {
             url: window.location.href,
             ownerName: userName,
             selectedHat: selectedHat,
-            isHiding
+            isHiding,
+            speechText: speechText,
+            isThinking: storedData.state === 'thinking'
           }
         }));
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { MonkeyVisual } from '@extension/shared';
 import { MonkeyState } from '@extension/storage';
+import { SpeechBubble } from './SpeechBubble';
 
 interface OtherMonkey {
   position: {
@@ -11,6 +12,8 @@ interface OtherMonkey {
   direction?: 'left' | 'right';
   ownerName: string;
   selectedHat?: string;
+  speechText?: string;
+  isThinking?: boolean;
 }
 
 interface OtherMonkeysProps {
@@ -45,6 +48,13 @@ export const OtherMonkeys: React.FC<OtherMonkeysProps> = ({ monkeys }) => {
             }}>
             {monkey.ownerName || 'Anonymous'}
           </div>
+          {(monkey.speechText || monkey.isThinking) && (
+            <SpeechBubble 
+              text={monkey.speechText || ''} 
+              isThinking={monkey.isThinking}
+              isOnRightSide={monkey.position.x > window.innerWidth / 2}
+            />
+          )}
           <MonkeyVisual
             selectedHat={monkey.selectedHat}
             direction={monkey.direction || 'left'}

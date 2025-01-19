@@ -17,6 +17,8 @@ export interface MonkeyPosition {
     ownerName: string;
     selectedHat?: string;
     isHiding?: boolean;
+    speechText?: string;
+    isThinking?: boolean;
 }
 
 export interface WebSocketMessage {
