@@ -3,16 +3,16 @@ import React from 'react';
 interface SpeechBubbleProps {
   text: string;
   isThinking?: boolean;
+  isOnRightSide?: boolean;
 }
 
-export const SpeechBubble: React.FC<SpeechBubbleProps> = ({ text, isThinking }) => {
+export const SpeechBubble: React.FC<SpeechBubbleProps> = ({ text, isThinking, isOnRightSide }) => {
   return (
     <div
       style={{
         position: 'absolute',
         bottom: '30px',
-        left: '100%',
-        marginLeft: '1rem',
+        ...(isOnRightSide ? { right: '100%', marginRight: '1rem' } : { left: '100%', marginLeft: '1rem' }),
         zIndex: 9998,
       }}>
       <div
