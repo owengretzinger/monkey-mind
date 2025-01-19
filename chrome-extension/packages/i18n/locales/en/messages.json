@@ -1,11 +1,11 @@
 {
   "extensionDescription": {
     "description": "Extension description",
-    "message": "Chrome extension boilerplate developed with Vite, React and Typescript"
+    "message": "Adds a pet monkey to your browser. Select different hats for different personalities, and explore the web with other monkeys!"
   },
   "extensionName": {
     "description": "Extension name",
-    "message": "Chrome extension boilerplate"
+    "message": "Monkey Mind"
   },
   "toggleTheme": {
     "message": "Toggle theme"
