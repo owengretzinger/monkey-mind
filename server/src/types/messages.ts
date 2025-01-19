@@ -12,7 +12,13 @@ export interface MonkeyPosition {
         y: number;
     };
     state: string;
+    direction?: 'left' | 'right';
     url: string;
+    ownerName: string;
+    selectedHat?: string;
+    isHiding?: boolean;
+    speechText?: string;
+    isThinking?: boolean;
 }
 
 export interface WebSocketMessage {

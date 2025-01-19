@@ -1,129 +1,57 @@
-import { useEffect, useMemo } from 'react';
-import { useStorage, MonkeyVisual } from '@extension/shared';
+import { useEffect } from 'react';
+import { useStorage } from '@extension/shared';
 import { monkeyStateStorage, hatStorage } from '@extension/storage';
-import { SpeechBubble } from './components/SpeechBubble';
-import { useDraggable } from './hooks/useDraggable';
-import { useMonkeyText } from './hooks/useMonkeyText';
 import { OtherMonkeys } from './components/OtherMonkeys';
+import { LocalMonkey } from './components/LocalMonkey';
 import { useState } from 'react';
 
-const SPEED = 150; // pixels per second
-const WALKING_TIME = 5000; // milliseconds
-const WS_URL = 'ws://localhost:3000'; // Adjust this URL as needed
+const WS_URL = 'ws://localhost:3000';
 
 export default function Monkey() {
   const storedData = useStorage(monkeyStateStorage);
-  const { handleMouseDown } = useDraggable(storedData.position, monkeyStateStorage);
-  const selectedHat = useStorage(hatStorage);
-  const { speechText, generateText } = useMonkeyText(selectedHat);
   const [otherMonkeys, setOtherMonkeys] = useState<Record<string, any>>({});
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>('Anonymous');
+  const selectedHat = useStorage(hatStorage);
+  const [prevPositions, setPrevPositions] = useState<Record<string, { x: number; y: number }>>({});
 
-  const getTargetPosition = () => {
-    const startPosition = storedData.position;
-    let targetX;
-
-    if (storedData.state === 'walking') {
-      // If walking in, go to nearest quarter horizontally
-      const leftQuarter = window.innerWidth * 0.25;
-      const rightQuarter = window.innerWidth * 0.75;
-
-      // Determine horizontal position
-      if (startPosition.x < 0) {
-        targetX = leftQuarter;
-      } else if (startPosition.x > window.innerWidth) {
-        targetX = rightQuarter;
-      } else {
-        targetX = startPosition.x < window.innerWidth / 2 ? leftQuarter : rightQuarter;
+  // Add effect to get user name
+  useEffect(() => {
+    chrome.storage.local.get(['userName'], (result) => {
+      if (result.userName) {
+        setUserName(result.userName);
       }
-    } else if (storedData.state === 'leaving') {
-      // If leaving, exit through nearest edge
-      targetX = startPosition.x < window.innerWidth / 2 ? -100 : window.innerWidth + 100;
-    }
+    });
+  }, []);
 
-    return {
-      x: Math.floor(targetX!),
-      y: startPosition.y, // Keep same Y position
+  // Email effect
+  useEffect(() => {
+    chrome.storage.local.get(['userEmail'], (result) => {
+      if (result.userEmail) {
+        setUserEmail(result.userEmail);
+      } else {
+        const tempId = 'temp_' + Math.random().toString(36).substring(7);
+        setUserEmail(tempId);
+      }
+    });
+  }, []);
+
+  // WebSocket effect
+  useEffect(() => {
+    if (!userEmail) return;
+
+    const ws = new WebSocket(WS_URL);
+    
+    const isOutOfBounds = (position: { x: number; y: number }) => {
+      return position.x < -100 || 
+             position.x > window.innerWidth + 100 || 
+             position.y < -100 || 
+             position.y > window.innerHeight + 100;
     };
-  };
 
-  const targetPosition = useMemo(getTargetPosition, [storedData.state, storedData.position]);
-
-  // Add timer for idle state
-  useEffect(() => {
-    if (storedData.state === 'idle') {
-      const timer = setTimeout(() => {
-        monkeyStateStorage.setState('leaving');
-      }, WALKING_TIME);
-      return () => clearTimeout(timer);
-    }
-    return undefined;
-  }, [storedData.state]);
-
-  useEffect(() => {
-    if (storedData.state === 'walking' || storedData.state === 'leaving') {
-      let animationFrameId: number;
-      const speed = SPEED; // pixels per second
-      let lastTime = performance.now();
-
-      const animate = (currentTime: number) => {
-        const deltaTime = (currentTime - lastTime) / 1000;
-        lastTime = currentTime;
-
-        const currentX = storedData.position.x;
-        const distanceX = targetPosition.x - currentX;
-        const directionX = distanceX > 0 ? 1 : -1;
-        const moveAmount = speed * deltaTime;
-
-        if (Math.abs(distanceX) <= moveAmount) {
-          monkeyStateStorage.setPosition(targetPosition);
-          if (storedData.state === 'walking') {
-            monkeyStateStorage.setState('talking');
-            generateText(true);
-          } else {
-            monkeyStateStorage.setState('hiding');
-          }
-        } else {
-          // Move only horizontally
-          monkeyStateStorage.setPosition({
-            x: currentX + moveAmount * directionX,
-            y: storedData.position.y,
-          });
-          animationFrameId = requestAnimationFrame(animate);
-        }
-      };
-
-      animationFrameId = requestAnimationFrame(animate);
-      return () => {
-        if (animationFrameId) {
-          cancelAnimationFrame(animationFrameId);
-        }
-      };
-    }
-    return undefined;
-  }, [generateText, storedData.state, storedData.position, targetPosition]);
-
-  useEffect(() => {
-    const messageListener = async (message: { type: string }) => {
-      if (message.type === 'COME_HERE') {
-        const topQuarter = window.scrollY + window.innerHeight * 0.25;
-        const bottomQuarter = window.scrollY + window.innerHeight * 0.75;
-        const currentY = storedData.position.y;
-
-        let newY = currentY;
-        if (currentY < topQuarter) {
-          newY = topQuarter;
-        } else if (currentY > bottomQuarter) {
-          newY = bottomQuarter;
-        }
-
-        const newPosition = {
-          x: storedData.position.x,
-          y: newY,
-        };
-
-        await monkeyStateStorage.setPosition(newPosition);
-
-        monkeyStateStorage.setState('walking');
+    const calculateDirection = (currentPos: { x: number; y: number }, prevPos: { x: number; y: number }) => {
+      if (Math.abs(currentPos.x - prevPos.x) > 1) { // Only change direction if moved more than 1px
+        return currentPos.x > prevPos.x ? 'right' : 'left';
       }
     };
 
@@ -135,31 +63,68 @@ export default function Monkey() {
   useEffect(() => {
     const ws = new WebSocket(WS_URL);
 
+      return null; // Keep existing direction if not moving horizontally
+    };
+
     ws.onopen = () => {
       console.log('WebSocket Connected');
-      // Send initial presence with a unique ID
-      const clientId = Math.random().toString(36).substring(7);
-      ws.send(
-        JSON.stringify({
-          type: 'monkey_position',
-          data: {
-            id: clientId,
-            position: storedData.position,
-            state: storedData.state,
-            url: window.location.href,
-          },
-        }),
-      );
+      const isHiding = storedData.state === 'hiding' || isOutOfBounds(storedData.position);
+      ws.send(JSON.stringify({
+        type: 'monkey_position',
+        data: {
+          id: userEmail,
+          position: storedData.position,
+          state: storedData.state,
+          direction: storedData.state === 'walking' ? 'right' : 'left',
+          url: window.location.href,
+          ownerName: userName,
+          selectedHat: selectedHat,
+          isHiding
+        }
+      }));
+      setPrevPositions({ [userEmail]: storedData.position });
     };
 
     ws.onmessage = event => {
       const message = JSON.parse(event.data);
       if (message.type === 'monkey_position') {
-        const { id, position, state } = message.data;
-        setOtherMonkeys(prev => ({
-          ...prev,
-          [id]: { position, state },
-        }));
+        const { id, position, state, direction, ownerName, selectedHat, isHiding } = message.data;
+        if (id !== userEmail) {
+          if (!isHiding && !isOutOfBounds(position)) {
+            setOtherMonkeys(prev => {
+              const prevMonkey = prev[id];
+              const prevPos = prevPositions[id] || position;
+              const newDirection = calculateDirection(position, prevPos) || 
+                                 prevMonkey?.direction || 
+                                 direction || 
+                                 'left';
+
+              setPrevPositions(prev => ({ ...prev, [id]: position }));
+
+              return {
+                ...prev,
+                [id]: { 
+                  position, 
+                  state,
+                  direction: newDirection,
+                  ownerName,
+                  selectedHat
+                }
+              };
+            });
+          } else {
+            setOtherMonkeys(prev => {
+              const newMonkeys = { ...prev };
+              delete newMonkeys[id];
+              return newMonkeys;
+            });
+            setPrevPositions(prev => {
+              const newPositions = { ...prev };
+              delete newPositions[id];
+              return newPositions;
+            });
+          }
+        }
       } else if (message.type === 'monkey_left') {
         const { id } = message.data;
         setOtherMonkeys(prev => {
@@ -167,37 +132,56 @@ export default function Monkey() {
           delete newMonkeys[id];
           return newMonkeys;
         });
+        setPrevPositions(prev => {
+          const newPositions = { ...prev };
+          delete newPositions[id];
+          return newPositions;
+        });
       }
     };
 
-    // Function to send position updates
     const sendPositionUpdate = () => {
       if (ws.readyState === WebSocket.OPEN) {
-        ws.send(
-          JSON.stringify({
-            type: 'monkey_position',
-            data: {
-              position: storedData.position,
-              state: storedData.state,
-              url: window.location.href,
-            },
-          }),
-        );
+        const isHiding = storedData.state === 'hiding' || isOutOfBounds(storedData.position);
+        const prevPos = prevPositions[userEmail] || storedData.position;
+        const newDirection = calculateDirection(storedData.position, prevPos) || 
+                           (storedData.state === 'walking' ? 'right' : 'left');
+
+        setPrevPositions(prev => ({ ...prev, [userEmail]: storedData.position }));
+
+        ws.send(JSON.stringify({
+          type: 'monkey_position',
+          data: {
+            id: userEmail,
+            position: storedData.position,
+            state: storedData.state,
+            direction: newDirection,
+            url: window.location.href,
+            ownerName: userName,
+            selectedHat: selectedHat,
+            isHiding,
+            speechText: speechText,
+            isThinking: storedData.state === 'thinking'
+          }
+        }));
+
+        if (isHiding) {
+          ws.send(JSON.stringify({
+            type: 'monkey_left',
+            data: { id: userEmail }
+          }));
+        }
       }
     };
 
-    // Send position updates whenever position or state changes
     sendPositionUpdate();
-
-    // Set up position update interval
     const updateInterval = setInterval(sendPositionUpdate, 1000);
 
-    // Cleanup
     return () => {
       clearInterval(updateInterval);
       ws.close();
     };
-  }, [storedData.position, storedData.state]);
+  }, [storedData.position, storedData.state, userEmail, userName, selectedHat]);
 
   return (
     <div
@@ -214,56 +198,7 @@ export default function Monkey() {
       draggable={false}
       onDragStart={e => e.preventDefault()}>
       <OtherMonkeys monkeys={otherMonkeys} />
-      <div
-        role="button"
-        tabIndex={0}
-        aria-label="Draggable monkey"
-        style={{
-          position: 'absolute',
-          left: storedData.position.x,
-          top: storedData.position.y,
-          cursor: 'move',
-          userSelect: 'none',
-          pointerEvents: 'auto',
-          width: '64px',
-          height: '64px',
-          zIndex: 1,
-          WebkitUserSelect: 'none',
-        }}
-        draggable={false}
-        className="relative"
-        onMouseDown={storedData.state !== 'hiding' ? handleMouseDown : undefined}
-        onKeyDown={
-          storedData.state !== 'hiding'
-            ? e => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  handleMouseDown(e as unknown as React.MouseEvent<HTMLDivElement>);
-                }
-              }
-            : undefined
-        }
-        onDragStart={e => e.preventDefault()}>
-        {(speechText || storedData.state === 'thinking') && (
-          <SpeechBubble
-            text={speechText}
-            isThinking={storedData.state === 'thinking'}
-            isOnRightSide={storedData.position.x > window.innerWidth / 2}
-          />
-        )}
-        <MonkeyVisual
-          selectedHat={selectedHat}
-          direction={
-            storedData.state === 'walking' || storedData.state === 'leaving'
-              ? storedData.position.x < targetPosition.x
-                ? 'right'
-                : 'left'
-              : 'left'
-          }
-          state={storedData.state}
-          color={storedData.color}
-        />
-        {/* <div className="pt-4">{storedData.state}</div> */}
-      </div>
+      <LocalMonkey />
     </div>
   );
 }
