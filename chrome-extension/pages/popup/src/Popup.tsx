@@ -9,6 +9,7 @@ const Popup = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [newDisplayName, setNewDisplayName] = useState(monkey.user.displayName);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [serverStatus, setServerStatus] = useState<'online' | 'offline'>('offline');
 
   useEffect(() => {
     if (isEditingName) {
@@ -70,6 +71,23 @@ const Popup = () => {
     }
   };
 
+  const checkServerStatus = useCallback(async () => {
+    try {
+      const response = await fetch(SERVER_URL + '/api/health');
+      if (response.ok) {
+        setServerStatus('online');
+      } else {
+        setServerStatus('offline');
+      }
+    } catch (error) {
+      setServerStatus('offline');
+    }
+  }, []);
+
+  useEffect(() => {
+    checkServerStatus();
+  }, [checkServerStatus]);
+
   if (!monkey.user.id) {
     const userId = crypto.randomUUID();
     const user = {
@@ -88,32 +106,38 @@ const Popup = () => {
     <div className={`App`}>
       <header className={`App-header text-amber-950`}>
         <div className="bg-amber-800/5">
-          <div className="flex w-full items-center gap-1 p-1 text-left">
-            {isEditingName ? (
-              <div className="flex w-full gap-1">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={newDisplayName}
-                  onChange={e => setNewDisplayName(e.target.value)}
-                  className="flex-1 rounded border border-amber-800/30 bg-amber-50 px-1"
-                  onKeyDown={e => e.key === 'Enter' && handleUpdateDisplayName()}
-                />
-                <button onClick={handleUpdateDisplayName} className="text-amber-800 hover:text-amber-900">
-                  Save
-                </button>
-                <button onClick={() => setIsEditingName(false)} className="text-amber-800 hover:text-amber-900">
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <>
-                <span className="text-sm">{monkey.user.displayName}</span>
-                <button onClick={() => setIsEditingName(true)} className="ml-1 text-amber-800 hover:text-amber-900">
-                  Edit Name
-                </button>
-              </>
-            )}
+          <div className="flex w-full items-center justify-between gap-1 p-1 text-left">
+            <div className="flex items-center gap-1">
+              {isEditingName ? (
+                <div className="flex w-full gap-1">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={newDisplayName}
+                    onChange={e => setNewDisplayName(e.target.value)}
+                    className="flex-1 rounded border border-amber-800/30 bg-amber-50 px-1"
+                    onKeyDown={e => e.key === 'Enter' && handleUpdateDisplayName()}
+                  />
+                  <button onClick={handleUpdateDisplayName} className="text-amber-800 hover:text-amber-900">
+                    Save
+                  </button>
+                  <button onClick={() => setIsEditingName(false)} className="text-amber-800 hover:text-amber-900">
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <span className="text-sm">{monkey.user.displayName}</span>
+                  <button onClick={() => setIsEditingName(true)} className="ml-1 text-amber-800 hover:text-amber-900">
+                    Edit Name
+                  </button>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-xs">Server:</span>
+              <div className={`size-2 rounded-full ${serverStatus === 'online' ? 'bg-green-500' : 'bg-red-500'}`} />
+            </div>
           </div>
           <div className="flex flex-col items-center justify-center space-y-2 p-4">
             <div className="relative size-16">
